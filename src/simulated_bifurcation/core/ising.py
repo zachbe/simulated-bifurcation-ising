@@ -19,12 +19,15 @@ QuadraticPolynomial:
 """
 
 
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union, List
 
 import torch
 from numpy import ndarray
 
 from ..optimizer import SimulatedBifurcationEngine, SimulatedBifurcationOptimizer
+
+import ctypes
+from time   import sleep
 
 # Workaround because `Self` type is only available in Python >= 3.11
 SelfIsing = TypeVar("SelfIsing", bound="Ising")
@@ -92,6 +95,7 @@ class Ising:
         h: Union[torch.Tensor, ndarray, None] = None,
         dtype: Optional[torch.dtype] = None,
         device: Optional[Union[str, torch.device]] = None,
+        digital_ising_size: Optional[int] = 8
     ) -> None:
         self.dimension = J.shape[0]
         if isinstance(J, ndarray):
@@ -100,6 +104,9 @@ class Ising:
             h = torch.from_numpy(h)
         self.__init_from_tensor(J, h, dtype, device)
         self.computed_spins = None
+        self.digital_ising_size = digital_ising_size
+        self.ising_lib = ctypes.CDLL("PATH") # TODO: add path
+        self.ising_lib.initalize_fpga()
 
     def __len__(self) -> int:
         return self.dimension
@@ -221,6 +228,81 @@ class Ising:
             sb_tensor = tensor
         return sb_tensor
 
+    def program_digital_ising(
+        self,
+        autoscale: bool = False, # Scale weights to fit in the ising machine range.
+                                 # If false, error on weights that don't match.
+                                 # TODO: Implement this.
+        automerge: bool = True   # For models smaller than 1/2 the solver size, merge
+                                 # mutliple spins into multi-spin chunks.
+                                 # TODO: Implement this.
+    ) -> None:
+        """
+        Program the Digital Ising Machine using the provided Ising
+        tensor.
+
+        Digital Ising Machine contains digital_ising_size physical
+        spins. The final spin is the local field potential.
+        """
+        tensor = as_simulated_bifurcation_tensor()
+        J_list = tensor.tolist()
+        h_list = self.h.tolist()
+
+        for i in range(0, digital_ising_size - 1):
+            for j in range(i, digital_ising_size - 1):
+                addr = 0x01000000 + (j << 13) + (i << 2)
+                weight = 1 << J_list[i][j]
+                self.ising_lib.program_weight(weight, addr)
+
+            addr = 0x01000000 + ((digital_ising_size - 1)<<13) + (i << 2);
+            weight = (1 << h_list[i])
+            self.ising_lib.program_weight(weight, addr);
+
+    def configure_digital_ising(
+        self,
+        counter_cutoff: int = 0x00004000,
+        counter_max: int = 0x00008000
+    ) -> None:
+        """
+        Configure the counters on the digital ising machine.
+        
+        Parameters
+        ----------
+        counter_cutoff : int
+            The phase counter value at which a spin is considered "in phase"
+            with the local field potential.
+        counter_max : int
+            The phase counter value at which the counter overflows and stops
+            counting up. Usually 2x counter_cutoff.
+        """
+        self.ising_lib.program_counter_cutoff(counter_cutoff)
+        self.ising_lib.program_counter_max(counter_max)
+
+    def run_digital_ising(
+        self,
+        counter_cutoff: int = 0x00004000,
+        time_ms: int = 1000
+    ) -> List[int]:
+        """
+        Run the digital Ising machine!
+        
+        Parameters
+        ----------
+        time_ms : int
+            The time, in milliseconds, to wait before reading out data.
+        """
+        self.ising_lib.start()
+        sleep(time_ms / 1000)
+        spins = []
+        for i in range(digital_ising_size - 2, -1, -1):
+            addr = 0x00001000 + (i << 2)
+            value = self.ising_lib.read_weight(addr)
+            spin = 1 if (value > counter_cutoff) else 0
+            spins.append(spin)
+
+        self.ising_lib.stop()
+        return spins
+
     @property
     def dtype(self) -> torch.dtype:
         """
@@ -251,6 +333,7 @@ class Ising:
         sampling_period: int = 50,
         convergence_threshold: int = 50,
         timeout: Optional[float] = None,
+        use_fpga: bool = False
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -392,19 +475,26 @@ class Ising:
         https://doi.org/10.1038/s42005-022-00929-9
 
         """
-        engine = SimulatedBifurcationEngine.get_engine(ballistic, heated)
-        optimizer = SimulatedBifurcationOptimizer(
-            agents,
-            max_steps,
-            timeout,
-            engine,
-            verbose,
-            sampling_period,
-            convergence_threshold,
-        )
-        tensor = self.as_simulated_bifurcation_tensor()
-        spins = optimizer.run_integrator(tensor, use_window)
-        if self.linear_term:
-            self.computed_spins = spins[-1] * spins[:-1]
+        if use_fpga:
+            # TODO: Using defaults for everything right now
+            self.program_digital_ising()
+            self.configure_digital_ising()
+            spins = self.run_digital_ising()
+            self.computed_spins = torch.Tensor(spins)
         else:
-            self.computed_spins = spins
+            engine = SimulatedBifurcationEngine.get_engine(ballistic, heated)
+            optimizer = SimulatedBifurcationOptimizer(
+                agents,
+                max_steps,
+                timeout,
+                engine,
+                verbose,
+                sampling_period,
+                convergence_threshold,
+            )
+            tensor = self.as_simulated_bifurcation_tensor()
+            spins = optimizer.run_integrator(tensor, use_window)
+            if self.linear_term:
+                self.computed_spins = spins[-1] * spins[:-1]
+            else:
+                self.computed_spins = spins
