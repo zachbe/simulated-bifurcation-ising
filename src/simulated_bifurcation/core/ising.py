@@ -265,7 +265,8 @@ class Ising:
                 
                 addr = 0x01000000 + (j << 13) + (i << 2)
                 written = self.ising_lib.write_ising(weight, addr)
-                #TODO: Error if write failed
+                assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
+                                            hex(addr) + " but read " + hex(written)
 
             if (i < len(h_list)):
                 weight = 1 << int(int(self.weight_scale/2) - h_list[i])
@@ -273,7 +274,8 @@ class Ising:
                 weight = default_weight
             addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (i << 2);
             written = self.ising_lib.write_ising(weight, addr)
-            #TODO: Error if write failed
+            assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
+                                        hex(addr) + " but read " + hex(written)
 
     def configure_digital_ising(
         self,
@@ -503,7 +505,6 @@ class Ising:
         """
         if use_fpga:
             # TODO: Using defaults for everything right now
-            # TODO: Support multiple agents and other args to this function.
             self.configure_digital_ising()
             self.program_digital_ising()
             spins = self.run_digital_ising(agents = agents)
