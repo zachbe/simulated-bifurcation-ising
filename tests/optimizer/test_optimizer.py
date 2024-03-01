@@ -24,7 +24,7 @@ def test_optimizer_fpga():
     h = torch.tensor([7, 7, 7, 7, 7, 7], dtype=torch.float32)
     ising = Ising(J, h, use_fpga = True)
     ising.minimize(
-        1, #TODO: support multiple agents
+        3,
         10000,
         False,
         False,
@@ -36,7 +36,7 @@ def test_optimizer_fpga():
     )
     expected_data = copy.deepcopy(ising.computed_spins)
     ising.minimize(
-        1, #TODO: support multiple agents
+        3,
         10000,
         False,
         False,

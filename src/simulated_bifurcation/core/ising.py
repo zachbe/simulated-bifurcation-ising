@@ -297,6 +297,7 @@ class Ising:
 
     def run_digital_ising(
         self,
+        agents: int = 1,
         counter_cutoff: int = 0x00004000,
         time_ms: int = 1000
     ) -> List[int]:
@@ -305,20 +306,28 @@ class Ising:
         
         Parameters
         ----------
+        agents  : int
+            Number of times to run the solver.
+            TODO: Parallelism is not supported right now.
+        counter_cutoff : int 
+            The phase counter value at which a spin is considered "in phase"
+            with the local field potential.
         time_ms : int
             The time, in milliseconds, to wait before reading out data.
         """
-        self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
-        sleep(time_ms / 1000)
-        spins = []
-        for i in range(self.digital_ising_size - 1, -1, -1):
-            addr = 0x00001000 + (i << 2)
-            value = self.ising_lib.read_ising(addr)
-            spin = 1 if (value > counter_cutoff) else -1
-            spins.append([spin])
+        spins = [[] for _ in range(len(self.J))]
+        for j in range(agents):
+            self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
+            sleep(time_ms / 1000)
+            for i in range(len(self.J)):
+                index = self.digital_ising_size - i - 1
+                addr = 0x00001000 + (index << 2)
+                value = self.ising_lib.read_ising(addr)
+                spin = 1 if (value > counter_cutoff) else -1
+                spins[i].append(spin)
 
-        self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
-        return spins[0: len(self.J)]
+            self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
+        return spins
 
     @property
     def dtype(self) -> torch.dtype:
@@ -497,7 +506,7 @@ class Ising:
             # TODO: Support multiple agents and other args to this function.
             self.configure_digital_ising()
             self.program_digital_ising()
-            spins = self.run_digital_ising()
+            spins = self.run_digital_ising(agents = agents)
             self.computed_spins = torch.Tensor(spins)
         else:
             engine = SimulatedBifurcationEngine.get_engine(ballistic, heated)
