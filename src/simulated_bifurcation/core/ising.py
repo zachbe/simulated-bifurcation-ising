@@ -27,6 +27,7 @@ from numpy import ndarray
 from ..optimizer import SimulatedBifurcationEngine, SimulatedBifurcationOptimizer
 
 import ctypes
+import os
 from time   import sleep
 
 # Workaround because `Self` type is only available in Python >= 3.11
@@ -95,7 +96,9 @@ class Ising:
         h: Union[torch.Tensor, ndarray, None] = None,
         dtype: Optional[torch.dtype] = None,
         device: Optional[Union[str, torch.device]] = None,
-        digital_ising_size: Optional[int] = 8
+        digital_ising_size: Optional[int] = 8,
+        use_fpga: bool = False,
+        weight_scale: int = 15
     ) -> None:
         self.dimension = J.shape[0]
         if isinstance(J, ndarray):
@@ -105,8 +108,12 @@ class Ising:
         self.__init_from_tensor(J, h, dtype, device)
         self.computed_spins = None
         self.digital_ising_size = digital_ising_size
-        self.ising_lib = ctypes.CDLL("PATH") # TODO: add path
-        self.ising_lib.initalize_fpga()
+        self.weight_scale = weight_scale
+        self.use_fpga = use_fpga
+        if use_fpga:
+            #TODO: Make this not hardcoded
+            self.ising_lib = ctypes.CDLL("/home/centos/src/project_data/digial-ising/sw/ising_lib.so")
+            self.ising_lib.initialize_fpga()
 
     def __len__(self) -> int:
         return self.dimension
@@ -244,19 +251,29 @@ class Ising:
         Digital Ising Machine contains digital_ising_size physical
         spins. The final spin is the local field potential.
         """
-        tensor = as_simulated_bifurcation_tensor()
-        J_list = tensor.tolist()
+        J_list = self.J.tolist()
         h_list = self.h.tolist()
 
-        for i in range(0, digital_ising_size - 1):
-            for j in range(i, digital_ising_size - 1):
-                addr = 0x01000000 + (j << 13) + (i << 2)
-                weight = 1 << J_list[i][j]
-                self.ising_lib.program_weight(weight, addr)
+        default_weight = 1 << int(self.weight_scale/2)
 
-            addr = 0x01000000 + ((digital_ising_size - 1)<<13) + (i << 2);
-            weight = (1 << h_list[i])
-            self.ising_lib.program_weight(weight, addr);
+        for i in range(0, self.digital_ising_size - 1):
+            for j in range(i + 1, self.digital_ising_size - 1):
+                if (i < len(J_list)) and (j < len(J_list[i])):
+                    weight = 1 << int(int(J_list[i][j]) + int(self.weight_scale/2))
+                else:
+                    weight = default_weight
+                
+                addr = 0x01000000 + (j << 13) + (i << 2)
+                print("Weight: " + str(weight) + " Addr: " + hex(addr))
+                self.ising_lib.write_ising(weight, addr)
+                print("Weight: " + hex(self.ising_lib.read_ising(addr)) + " Addr: " + hex(addr))
+
+            if (i < len(h_list)):
+                weight = 1 << int(h_list[i] + int(self.weight_scale/2))
+            else:
+                weight = default_weight
+            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (i << 2);
+            self.ising_lib.write_ising(weight, addr);
 
     def configure_digital_ising(
         self,
@@ -275,8 +292,8 @@ class Ising:
             The phase counter value at which the counter overflows and stops
             counting up. Usually 2x counter_cutoff.
         """
-        self.ising_lib.program_counter_cutoff(counter_cutoff)
-        self.ising_lib.program_counter_max(counter_max)
+        self.ising_lib.write_ising(counter_cutoff, 0x00000600)
+        self.ising_lib.write_ising(counter_max   , 0x00000700)
 
     def run_digital_ising(
         self,
@@ -291,16 +308,17 @@ class Ising:
         time_ms : int
             The time, in milliseconds, to wait before reading out data.
         """
-        self.ising_lib.start()
+        self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
         sleep(time_ms / 1000)
         spins = []
-        for i in range(digital_ising_size - 2, -1, -1):
+        for i in range(self.digital_ising_size - 2, -1, -1):
             addr = 0x00001000 + (i << 2)
-            value = self.ising_lib.read_weight(addr)
+            value = self.ising_lib.read_ising(addr)
+            print("Value: " + hex(value) + " Addr: " + hex(addr))
             spin = 1 if (value > counter_cutoff) else 0
             spins.append(spin)
 
-        self.ising_lib.stop()
+        self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
         return spins
 
     @property
@@ -477,8 +495,9 @@ class Ising:
         """
         if use_fpga:
             # TODO: Using defaults for everything right now
-            self.program_digital_ising()
+            # TODO: Support multiple agents and other args to this function.
             self.configure_digital_ising()
+            self.program_digital_ising()
             spins = self.run_digital_ising()
             self.computed_spins = torch.Tensor(spins)
         else:

@@ -12,6 +12,14 @@ J = torch.tensor(
 )
 h = torch.tensor([1, 0, -1], dtype=torch.float32)
 
+def test_init_ising_model_fpga():
+    ising = Ising(J, h, use_fpga = True)
+    assert torch.equal(ising.J, J)
+    assert torch.equal(ising.h, h)
+    assert ising.linear_term
+    assert len(ising) == 3
+    assert ising.dimension == 3
+
 
 def test_init_ising_model_from_tensors():
     ising = Ising(J, h)

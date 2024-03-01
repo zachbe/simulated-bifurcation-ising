@@ -8,6 +8,34 @@ from src.simulated_bifurcation.optimizer import (
     SimulatedBifurcationOptimizer,
 )
 
+def test_optimizer_fpga():
+    J = torch.tensor(
+        [
+            [ 1,  0, -7, -7,  0,  0],
+            [ 0,  1, -7, -7,  0,  0],
+            [-7, -7,  1,  0, -7, -7],
+            [-7, -7,  0,  1, -7, -7],
+            [ 0,  0, -7, -7,  1,  0],
+            [ 0,  0, -7, -7,  0,  1]
+        ],
+        dtype=torch.float32,
+    )
+    h = torch.tensor([1, 1, 1, 1, 1, 1], dtype=torch.float32)
+    ising = Ising(J, h, use_fpga = True)
+    ising.minimize(
+        1, #TODO: support multiple agents
+        10000,
+        False,
+        False,
+        False,
+        use_window=False,
+        sampling_period=50,
+        convergence_threshold=50,
+        use_fpga = True
+    )
+    expected_data = torch.tensor([[-1.], [-1.], [1.], [1.], [-1.], [-1.]])
+    assert torch.equal(expected_data, ising.computed_spins)
+
 
 def test_optimizer():
     torch.manual_seed(42)
