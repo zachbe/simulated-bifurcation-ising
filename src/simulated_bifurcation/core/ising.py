@@ -264,16 +264,16 @@ class Ising:
                     weight = default_weight
                 
                 addr = 0x01000000 + (j << 13) + (i << 2)
-                print("Weight: " + str(weight) + " Addr: " + hex(addr))
-                self.ising_lib.write_ising(weight, addr)
-                print("Weight: " + hex(self.ising_lib.read_ising(addr)) + " Addr: " + hex(addr))
+                written = self.ising_lib.write_ising(weight, addr)
+                #TODO: Error if write failed
 
             if (i < len(h_list)):
-                weight = 1 << int(h_list[i] + int(self.weight_scale/2))
+                weight = 1 << int(int(self.weight_scale/2) - h_list[i])
             else:
                 weight = default_weight
             addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (i << 2);
-            self.ising_lib.write_ising(weight, addr);
+            written = self.ising_lib.write_ising(weight, addr)
+            #TODO: Error if write failed
 
     def configure_digital_ising(
         self,
@@ -311,15 +311,14 @@ class Ising:
         self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
         sleep(time_ms / 1000)
         spins = []
-        for i in range(self.digital_ising_size - 2, -1, -1):
+        for i in range(self.digital_ising_size - 1, -1, -1):
             addr = 0x00001000 + (i << 2)
             value = self.ising_lib.read_ising(addr)
-            print("Value: " + hex(value) + " Addr: " + hex(addr))
-            spin = 1 if (value > counter_cutoff) else 0
-            spins.append(spin)
+            spin = 1 if (value > counter_cutoff) else -1
+            spins.append([spin])
 
         self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
-        return spins
+        return spins[0: len(self.J)]
 
     @property
     def dtype(self) -> torch.dtype:

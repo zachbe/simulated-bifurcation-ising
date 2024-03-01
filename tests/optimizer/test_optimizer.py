@@ -1,5 +1,6 @@
 import pytest
 import torch
+import copy
 
 from src.simulated_bifurcation import ConvergenceWarning, reset_env, set_env
 from src.simulated_bifurcation.core import Ising
@@ -20,8 +21,20 @@ def test_optimizer_fpga():
         ],
         dtype=torch.float32,
     )
-    h = torch.tensor([1, 1, 1, 1, 1, 1], dtype=torch.float32)
+    h = torch.tensor([7, 7, 7, 7, 7, 7], dtype=torch.float32)
     ising = Ising(J, h, use_fpga = True)
+    ising.minimize(
+        1, #TODO: support multiple agents
+        10000,
+        False,
+        False,
+        False,
+        use_window=False,
+        sampling_period=50,
+        convergence_threshold=50,
+        use_fpga = False
+    )
+    expected_data = copy.deepcopy(ising.computed_spins)
     ising.minimize(
         1, #TODO: support multiple agents
         10000,
@@ -33,7 +46,6 @@ def test_optimizer_fpga():
         convergence_threshold=50,
         use_fpga = True
     )
-    expected_data = torch.tensor([[-1.], [-1.], [1.], [1.], [-1.], [-1.]])
     assert torch.equal(expected_data, ising.computed_spins)
 
 
