@@ -12,16 +12,16 @@ from src.simulated_bifurcation.optimizer import (
 def test_optimizer_fpga():
     J = torch.tensor(
         [
-            [ 1,  0, -7, -7,  0,  0],
-            [ 0,  1, -7, -7,  0,  0],
-            [-7, -7,  1,  0, -7, -7],
-            [-7, -7,  0,  1, -7, -7],
-            [ 0,  0, -7, -7,  1,  0],
-            [ 0,  0, -7, -7,  0,  1]
+            [ 1,  0, -1, -1,  0,  0],
+            [ 0,  1, -1, -1,  0,  0],
+            [-1, -1,  1,  0, -1, -1],
+            [-1, -1,  0,  1, -1, -1],
+            [ 0,  0, -1, -1,  1,  0],
+            [ 0,  0, -1, -1,  0,  1]
         ],
         dtype=torch.float32,
     )
-    h = torch.tensor([7, 7, 7, 7, 7, 7], dtype=torch.float32)
+    h = torch.tensor([1, 1, 1, 1, 1, 1], dtype=torch.float32)
     ising = Ising(J, h, use_fpga = True)
     ising.minimize(
         3,

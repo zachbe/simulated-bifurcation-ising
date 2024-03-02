@@ -239,8 +239,7 @@ class Ising:
     def program_digital_ising(
         self,
         autoscale: bool = False, # Scale weights to fit in the ising machine range.
-                                 # If false, error on weights that don't match.
-                                 # TODO: Implement this.
+                                 # If false, warn on weights that don't match.
         automerge: bool = True   # For models smaller than 1/2 the solver size, merge
                                  # mutliple spins into multi-spin chunks.
                                  # TODO: Implement this.
@@ -254,6 +253,14 @@ class Ising:
         """
         J_list = self.symmetrize(self.J).tolist()
         h_list = self.h.tolist()
+
+        if autoscale:
+            max_val = max(max(_ for _ in J_list) + h_list)
+            min_val = min(min(_ for _ in J_list) + h_list)
+            max_val = max([max_val, abs(min_val)])
+            scale = int(self.weight_scale/2) / max_val
+            J_list = [[_*scale for _ in row] for row in J_list]
+            h_list = [_*scale for _ in h_list]
 
         default_weight = 1 << int(self.weight_scale/2)
         valid_weights  = range(-int(self.weight_scale/2), int(self.weight_scale/2) + 1)
@@ -373,7 +380,9 @@ class Ising:
         sampling_period: int = 50,
         convergence_threshold: int = 50,
         timeout: Optional[float] = None,
-        use_fpga: bool = False
+        use_fpga: bool = False,
+        autoscale: bool = True,
+        automerge: bool = True
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -518,7 +527,7 @@ class Ising:
         if use_fpga:
             # TODO: Using defaults for everything right now
             self.configure_digital_ising()
-            self.program_digital_ising()
+            self.program_digital_ising(autoscale = autoscale, automerge = automerge)
             spins = self.run_digital_ising(agents = agents)
             self.computed_spins = torch.Tensor(spins)
         else:
