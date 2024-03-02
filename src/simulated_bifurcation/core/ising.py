@@ -382,7 +382,9 @@ class Ising:
         timeout: Optional[float] = None,
         use_fpga: bool = False,
         autoscale: bool = True,
-        automerge: bool = True
+        automerge: bool = True,
+        counter_cutoff: int = 0x00004000,
+        counter_max: int = 0x00008000
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -525,10 +527,18 @@ class Ising:
 
         """
         if use_fpga:
-            # TODO: Using defaults for everything right now
-            self.configure_digital_ising()
-            self.program_digital_ising(autoscale = autoscale, automerge = automerge)
-            spins = self.run_digital_ising(agents = agents)
+            self.configure_digital_ising(
+                 counter_cutoff = counter_cutoff,
+                 counter_max = counter_max
+            )
+            self.program_digital_ising(
+                 autoscale = autoscale,
+                 automerge = automerge
+            )
+            spins = self.run_digital_ising(
+                 agents = agents,
+                 counter_cutoff = counter_cutoff
+            )
             self.computed_spins = torch.Tensor(spins)
         else:
             engine = SimulatedBifurcationEngine.get_engine(ballistic, heated)
