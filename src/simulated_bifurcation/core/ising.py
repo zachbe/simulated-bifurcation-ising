@@ -28,6 +28,7 @@ from ..optimizer import SimulatedBifurcationEngine, SimulatedBifurcationOptimize
 
 import ctypes
 import os
+import warnings
 from time   import sleep
 
 # Workaround because `Self` type is only available in Python >= 3.11
@@ -251,15 +252,21 @@ class Ising:
         Digital Ising Machine contains digital_ising_size physical
         spins. The final spin is the local field potential.
         """
-        J_list = self.J.tolist()
+        J_list = self.symmetrize(self.J).tolist()
         h_list = self.h.tolist()
 
         default_weight = 1 << int(self.weight_scale/2)
+        valid_weights  = range(-int(self.weight_scale/2), int(self.weight_scale/2) + 1)
 
         for i in range(0, self.digital_ising_size - 1):
             for j in range(i + 1, self.digital_ising_size - 1):
                 if (i < len(J_list)) and (j < len(J_list[i])):
-                    weight = 1 << int(int(J_list[i][j]) + int(self.weight_scale/2))
+                    weight_val = J_list[i][j]
+                    if weight_val not in valid_weights:
+                        if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
+                        if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
+                        warnings.warn("Rounding weight "+str(i)+","+str(j))
+                    weight = 1 << int(int(weight_val) + int(self.weight_scale/2))
                 else:
                     weight = default_weight
                 
@@ -269,7 +276,12 @@ class Ising:
                                             hex(addr) + " but read " + hex(written)
 
             if (i < len(h_list)):
-                weight = 1 << int(int(self.weight_scale/2) - h_list[i])
+                weight_val = h_list[i]
+                if weight_val not in valid_weights:
+                    if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
+                    if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
+                    warnings.warn("Rounding local field weight "+str(i))
+                weight = 1 << int(int(self.weight_scale/2) - int(weight_val))
             else:
                 weight = default_weight
             addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (i << 2);
