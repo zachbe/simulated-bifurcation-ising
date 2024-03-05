@@ -112,8 +112,7 @@ class Ising:
         self.weight_scale = weight_scale
         self.use_fpga = use_fpga
         if use_fpga:
-            #TODO: Make this not hardcoded
-            self.ising_lib = ctypes.CDLL("/home/centos/src/project_data/digial-ising/sw/ising_lib.so")
+            self.ising_lib = ctypes.CDLL("/usr/lib64/ising_lib.so")
             self.ising_lib.initialize_fpga()
 
     def __len__(self) -> int:
