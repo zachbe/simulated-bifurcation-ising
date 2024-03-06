@@ -23,6 +23,7 @@ from typing import Optional, TypeVar, Union, List
 
 import torch
 from numpy import ndarray
+import numpy as np
 
 from ..optimizer import SimulatedBifurcationEngine, SimulatedBifurcationOptimizer
 
@@ -241,7 +242,6 @@ class Ising:
                                  # If false, warn on weights that don't match.
         automerge: bool = True   # For models smaller than 1/2 the solver size, merge
                                  # mutliple spins into multi-spin chunks.
-                                 # TODO: Implement this.
     ) -> None:
         """
         Program the Digital Ising Machine using the provided Ising
@@ -250,23 +250,21 @@ class Ising:
         Digital Ising Machine contains digital_ising_size physical
         spins. The final spin is the local field potential.
         """
-        J_list = self.symmetrize(self.J).tolist()
-        h_list = self.h.tolist()
+        J_list = self.symmetrize(self.J).numpy()
+        h_list = self.h.numpy()
 
         if autoscale:
-            max_val = max(max(_ for _ in J_list) + h_list)
-            min_val = min(min(_ for _ in J_list) + h_list)
-            max_val = max([max_val, abs(min_val)])
+            max_val = max((np.max(np.absolute(J_list)), np.max(np.absolute(h_list))))
             scale = int(self.weight_scale/2) / max_val
-            J_list = [[_*scale for _ in row] for row in J_list]
-            h_list = [_*scale for _ in h_list]
+            J_list *= scale
+            h_list *= scale
 
         default_weight = 1 << int(self.weight_scale/2)
         valid_weights  = range(-int(self.weight_scale/2), int(self.weight_scale/2) + 1)
 
         for i in range(0, self.digital_ising_size - 1):
             for j in range(i + 1, self.digital_ising_size - 1):
-                if (i < len(J_list)) and (j < len(J_list[i])):
+                if (i < J_list.shape[0]) and (j < J_list.shape[1]):
                     weight_val = J_list[i][j]
                     if weight_val not in valid_weights:
                         if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
@@ -281,7 +279,7 @@ class Ising:
                 assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
                                             hex(addr) + " but read " + hex(written)
 
-            if (i < len(h_list)):
+            if (i < h_list.shape[0]):
                 weight_val = h_list[i]
                 if weight_val not in valid_weights:
                     if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
@@ -319,7 +317,8 @@ class Ising:
         self,
         agents: int = 1,
         counter_cutoff: int = 0x00004000,
-        time_ms: int = 1000
+        time_ms: int = 1000,
+        automerge: bool = True
     ) -> List[int]:
         """
         Run the digital Ising machine!
@@ -383,7 +382,8 @@ class Ising:
         autoscale: bool = True,
         automerge: bool = True,
         counter_cutoff: int = 0x00004000,
-        counter_max: int = 0x00008000
+        counter_max: int = 0x00008000,
+        time_ms: int = 1000
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -536,7 +536,9 @@ class Ising:
             )
             spins = self.run_digital_ising(
                  agents = agents,
-                 counter_cutoff = counter_cutoff
+                 counter_cutoff = counter_cutoff,
+                 time_ms = time_ms,
+                 automerge = automerge
             )
             self.computed_spins = torch.Tensor(spins)
         else:
