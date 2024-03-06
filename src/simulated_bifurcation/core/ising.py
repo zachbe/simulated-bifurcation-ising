@@ -339,12 +339,17 @@ class Ising:
         time_ms : int
             The time, in milliseconds, to wait before reading out data.
         """
+        mult = 1
+        if automerge:
+            mult = int(self.digital_ising_size/len(self.J))
+        
         spins = [[] for _ in range(len(self.J))]
         for j in range(agents):
             self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
             sleep(time_ms / 1000)
             for i in range(len(self.J)):
-                index = self.digital_ising_size - i - 1
+                #TODO: Add a warning if merged spins don't match
+                index = self.digital_ising_size - (i*mult) - 1
                 addr = 0x00001000 + (index << 2)
                 value = self.ising_lib.read_ising(addr)
                 spin = 1 if (value > counter_cutoff) else -1
