@@ -253,6 +253,11 @@ class Ising:
         J_list = self.symmetrize(self.J).numpy()
         h_list = self.h.numpy()
 
+        if automerge:
+            mult = int(self.digital_ising_size/J_list.shape[0])
+            J_list = np.kron(J_list, np.ones((mult,mult)))
+            h_list = np.kron(h_list, np.ones(mult))
+
         if autoscale:
             max_val = max((np.max(np.absolute(J_list)), np.max(np.absolute(h_list))))
             scale = int(self.weight_scale/2) / max_val
@@ -346,6 +351,7 @@ class Ising:
                 spins[i].append(spin)
 
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
+
         return spins
 
     @property

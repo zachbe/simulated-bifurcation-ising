@@ -22,7 +22,7 @@ def test_optimizer_fpga():
         dtype=torch.float32,
     )
     h = torch.tensor([1, 1, 1, 1, 1, 1], dtype=torch.float32)
-    ising = Ising(J, h, use_fpga = True)
+    ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
     ising.minimize(
         3,
         10000,
