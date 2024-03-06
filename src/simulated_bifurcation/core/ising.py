@@ -348,12 +348,17 @@ class Ising:
             self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
             sleep(time_ms / 1000)
             for i in range(len(self.J)):
-                #TODO: Add a warning if merged spins don't match
-                index = self.digital_ising_size - (i*mult) - 1
-                addr = 0x00001000 + (index << 2)
-                value = self.ising_lib.read_ising(addr)
-                spin = 1 if (value > counter_cutoff) else -1
-                spins[i].append(spin)
+                merged = np.zeros(mult)
+                base_index = self.digital_ising_size - (i*mult) - 1
+                for k in range(mult):
+                    index = base_index - k
+                    addr = 0x00001000 + (index << 2)
+                    value = self.ising_lib.read_ising(addr)
+                    spin = 1 if (value > counter_cutoff) else -1
+                    merged[k] = spin
+                if(merged != merged[0]).all():
+                    warnings.warn("Merged spins don't match for elem "+str(i))
+                spins[i].append(merged[0])
 
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
 
