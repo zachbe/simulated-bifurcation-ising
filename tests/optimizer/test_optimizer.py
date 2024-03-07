@@ -82,10 +82,12 @@ def test_optimizer_fpga_rand():
     )
     fpga_elapsed = ising.time_elapsed
     fpga_energy = ising.get_energy()
+    rand_energy = ising.get_rand_energy()
     print(sim_energy)
     print(sim_elapsed)
     print(fpga_energy)
     print(fpga_elapsed)
+    print(rand_energy)
     # TODO: Make this a bit more quantified.
     assert (fpga_energy[0] <= 0.5 * sim_energy[0])
 
