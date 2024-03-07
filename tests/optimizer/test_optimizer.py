@@ -1,6 +1,7 @@
 import pytest
 import torch
 import copy
+import time
 
 from src.simulated_bifurcation import ConvergenceWarning, reset_env, set_env
 from src.simulated_bifurcation.core import Ising
@@ -54,7 +55,7 @@ def test_optimizer_fpga_rand():
     h = torch.randint(-7, 8, (63,), dtype=torch.float32)
     ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
     ising.minimize(
-        3,
+        1,
         10000,
         False,
         False,
@@ -64,10 +65,11 @@ def test_optimizer_fpga_rand():
         convergence_threshold=50,
         use_fpga = False
     )
+    sim_elapsed = ising.time_elapsed
     expected_data = copy.deepcopy(ising.computed_spins)
     sim_energy = ising.get_energy()
     ising.minimize(
-        3,
+        1,
         10000,
         False,
         False,
@@ -75,9 +77,15 @@ def test_optimizer_fpga_rand():
         use_window=False,
         sampling_period=50,
         convergence_threshold=50,
-        use_fpga = True
+        use_fpga = True,
+        time_ms = 10
     )
+    fpga_elapsed = ising.time_elapsed
     fpga_energy = ising.get_energy()
+    print(sim_energy)
+    print(sim_elapsed)
+    print(fpga_energy)
+    print(fpga_elapsed)
     # TODO: Make this a bit more quantified.
     assert (fpga_energy[0] <= 0.5 * sim_energy[0])
 

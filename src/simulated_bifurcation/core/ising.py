@@ -24,6 +24,7 @@ from typing import Optional, TypeVar, Union, List
 import torch
 from numpy import ndarray
 import numpy as np
+import time
 
 from ..optimizer import SimulatedBifurcationEngine, SimulatedBifurcationOptimizer
 
@@ -112,6 +113,7 @@ class Ising:
         self.digital_ising_size = digital_ising_size
         self.weight_scale = weight_scale
         self.use_fpga = use_fpga
+        self.time_elapsed = None
         if use_fpga:
             self.ising_lib = ctypes.CDLL("/usr/lib64/ising_lib.so")
             self.ising_lib.initialize_fpga()
@@ -345,8 +347,12 @@ class Ising:
         
         spins = [[] for _ in range(len(self.J))]
         for j in range(agents):
+            start = time.time()
             self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
             sleep(time_ms / 1000)
+            finish = time.time()
+            self.time_elapsed += finish - start
+            # TODO: Stopping the ising machine should not also reset the weights
             for i in range(len(self.J)):
                 merged = np.zeros(mult)
                 base_index = self.digital_ising_size - (i*mult) - 1
@@ -552,6 +558,7 @@ class Ising:
 
         """
         if use_fpga:
+            self.time_elapsed = 0
             self.configure_digital_ising(
                  counter_cutoff = counter_cutoff,
                  counter_max = counter_max
@@ -579,7 +586,10 @@ class Ising:
                 convergence_threshold,
             )
             tensor = self.as_simulated_bifurcation_tensor()
+            start = time.time()
             spins = optimizer.run_integrator(tensor, use_window)
+            finish = time.time()
+            self.time_elapsed = finish - start
             if self.linear_term:
                 self.computed_spins = spins[-1] * spins[:-1]
             else:
