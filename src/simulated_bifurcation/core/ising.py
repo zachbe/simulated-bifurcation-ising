@@ -272,9 +272,9 @@ class Ising:
                 if (i < J_list.shape[0]) and (j < J_list.shape[1]):
                     weight_val = J_list[i][j]
                     if weight_val not in valid_weights:
+                        warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
                         if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                         if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                        warnings.warn("Rounding weight "+str(i)+","+str(j))
                     weight = 1 << int(int(weight_val) + int(self.weight_scale/2))
                 else:
                     weight = default_weight
@@ -287,9 +287,9 @@ class Ising:
             if (i < h_list.shape[0]):
                 weight_val = h_list[i]
                 if weight_val not in valid_weights:
+                    warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
                     if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                     if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                    warnings.warn("Rounding local field weight "+str(i))
                 weight = 1 << int(int(self.weight_scale/2) - int(weight_val))
             else:
                 weight = default_weight
@@ -332,7 +332,7 @@ class Ising:
         ----------
         agents  : int
             Number of times to run the solver.
-            TODO: Parallelism is not supported right now.
+            TODOmax glendale: Parallelism is not supported right now.
         counter_cutoff : int 
             The phase counter value at which a spin is considered "in phase"
             with the local field potential.
@@ -363,6 +363,16 @@ class Ising:
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
 
         return spins
+
+    def get_energy(self) -> int:
+        if self.computed_spins is None:
+            raise Exception("Can't get energy if spins aren't computed!")
+
+        if self.linear_term:
+            return -0.5*torch.matmul(torch.matmul(torch.transpose(self.computed_spins,0,1),self.J),self.computed_spins)[0]
+        else:
+            return torch.matmul(torch.transpose(self.h,0,1),self.computed_spins)[0] - \
+                   0.5*torch.matmul(torch.matmul(torch.transpose(self.computed_spins,0,1),self.J),self.computed_spins)[0]
 
     @property
     def dtype(self) -> torch.dtype:

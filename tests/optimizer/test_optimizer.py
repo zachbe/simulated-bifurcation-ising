@@ -48,6 +48,39 @@ def test_optimizer_fpga():
     )
     assert torch.equal(expected_data, ising.computed_spins)
 
+def test_optimizer_fpga_rand():
+    J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
+    J = torch.round((J + J.t()) / 2)
+    h = torch.randint(-7, 8, (63,), dtype=torch.float32)
+    ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+    ising.minimize(
+        3,
+        10000,
+        False,
+        False,
+        False,
+        use_window=False,
+        sampling_period=50,
+        convergence_threshold=50,
+        use_fpga = False
+    )
+    expected_data = copy.deepcopy(ising.computed_spins)
+    sim_energy = ising.get_energy()
+    ising.minimize(
+        3,
+        10000,
+        False,
+        False,
+        False,
+        use_window=False,
+        sampling_period=50,
+        convergence_threshold=50,
+        use_fpga = True
+    )
+    fpga_energy = ising.get_energy()
+    # TODO: Make this a bit more quantified.
+    assert (fpga_energy[0] <= 0.5 * sim_energy[0])
+
 
 def test_optimizer():
     torch.manual_seed(42)
