@@ -240,6 +240,7 @@ class Ising:
 
     def program_digital_ising(
         self,
+        order: List[int],
         autoscale: bool = False, # Scale weights to fit in the ising machine range.
                                  # If false, warn on weights that don't match.
         automerge: bool = True   # For models smaller than 1/2 the solver size, merge
@@ -259,7 +260,7 @@ class Ising:
             mult = int(self.digital_ising_size/J_list.shape[0])
             J_list = np.kron(J_list, np.ones((mult,mult)))
             h_list = np.kron(h_list, np.ones(mult))
-
+       
         if autoscale:
             max_val = max((np.max(np.absolute(J_list)), np.max(np.absolute(h_list))))
             scale = int(self.weight_scale/2) / max_val
@@ -280,8 +281,11 @@ class Ising:
                     weight = 1 << int(int(weight_val) + int(self.weight_scale/2))
                 else:
                     weight = default_weight
-                
-                addr = 0x01000000 + (j << 13) + (i << 2)
+                # Ising machine always expects larger index first
+                if order[j] > order[i]:
+                    addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
+                else:
+                    addr = 0x01000000 + (order[i] << 13) + (order[j] << 2)
                 written = self.ising_lib.write_ising(weight, addr)
                 assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
                                             hex(addr) + " but read " + hex(written)
@@ -295,10 +299,12 @@ class Ising:
                 weight = 1 << int(int(self.weight_scale/2) - int(weight_val))
             else:
                 weight = default_weight
-            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (i << 2);
+            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2);
             written = self.ising_lib.write_ising(weight, addr)
             assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
                                         hex(addr) + " but read " + hex(written)
+
+        return order
 
     def configure_digital_ising(
         self,
@@ -322,6 +328,7 @@ class Ising:
 
     def run_digital_ising(
         self,
+        order: List[int],
         agents: int = 1,
         counter_cutoff: int = 0x00004000,
         time_ms: int = 1000,
@@ -353,18 +360,20 @@ class Ising:
             finish = time.time()
             self.time_elapsed += finish - start
             # TODO: Stopping the ising machine should not also reset the weights
-            for i in range(len(self.J)):
-                merged = np.zeros(mult)
-                base_index = self.digital_ising_size - (i*mult) - 1
-                for k in range(mult):
-                    index = base_index - k
-                    addr = 0x00001000 + (index << 2)
-                    value = self.ising_lib.read_ising(addr)
-                    spin = 1 if (value > counter_cutoff) else -1
-                    merged[k] = spin
-                if(merged != merged[0]).all():
-                    warnings.warn("Merged spins don't match for elem "+str(i))
-                spins[i].append(merged[0])
+            for i in range(len(self.J) * mult):
+                if (i % mult == 0):
+                    merged = np.zeros(mult)
+
+                index = self.digital_ising_size - order[i] - 1
+                addr = 0x00001000 + (index << 2)
+                value = self.ising_lib.read_ising(addr)
+                spin = 1 if (value > counter_cutoff) else -1
+                merged[i % mult] = spin
+
+                if (i % mult == (mult-1)):    
+                    if(merged != merged[0]).all():
+                        warnings.warn("Merged spins don't match for elem "+str(i))
+                    spins[int(i / mult)].append(merged[0])
 
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
 
@@ -425,7 +434,8 @@ class Ising:
         automerge: bool = True,
         counter_cutoff: int = 0x00004000,
         counter_max: int = 0x00008000,
-        time_ms: int = 1000
+        time_ms: int = 1000,
+        shuffle_spins: bool = False
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -568,20 +578,26 @@ class Ising:
 
         """
         if use_fpga:
+            order = np.arange(self.digital_ising_size - 1) 
+            if shuffle_spins: np.random.shuffle(order)
+            order = order.tolist() # for typing reasons
+            order = [int(_) for _ in order] # for typing reasons
             self.time_elapsed = 0
             self.configure_digital_ising(
                  counter_cutoff = counter_cutoff,
                  counter_max = counter_max
             )
-            self.program_digital_ising(
+            order = self.program_digital_ising(
                  autoscale = autoscale,
-                 automerge = automerge
+                 automerge = automerge,
+                 order = order
             )
             spins = self.run_digital_ising(
                  agents = agents,
                  counter_cutoff = counter_cutoff,
                  time_ms = time_ms,
-                 automerge = automerge
+                 automerge = automerge,
+                 order = order
             )
             self.computed_spins = torch.Tensor(spins)
         else:

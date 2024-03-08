@@ -45,7 +45,8 @@ def test_optimizer_fpga():
         use_window=False,
         sampling_period=50,
         convergence_threshold=50,
-        use_fpga = True
+        use_fpga = True,
+        shuffle_spins = True
     )
     assert torch.equal(expected_data, ising.computed_spins)
 
@@ -78,7 +79,8 @@ def test_optimizer_fpga_rand():
         sampling_period=50,
         convergence_threshold=50,
         use_fpga = True,
-        time_ms = 10
+        time_ms = 10,
+        shuffle_spins = True
     )
     fpga_elapsed = ising.time_elapsed
     fpga_energy = ising.get_energy()
