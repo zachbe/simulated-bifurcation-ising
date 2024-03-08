@@ -62,7 +62,8 @@ for tests in range(num_tests):
             sampling_period=50,
             convergence_threshold=50,
             use_fpga = True,
-            time_ms = 100
+            time_ms = 100,
+            shuffle_spins = True
         )
         fpga_energy = ising.get_energy()
         print(fpga_energy)
