@@ -357,6 +357,7 @@ class Ising:
             start = time.time()
             self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
             sleep(time_ms / 1000)
+            self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
             finish = time.time()
             self.time_elapsed += finish - start
             # TODO: Stopping the ising machine should not also reset the weights
@@ -374,8 +375,6 @@ class Ising:
                     if(merged != merged[0]).all():
                         warnings.warn("Merged spins don't match for elem "+str(i))
                     spins[int(i / mult)].append(merged[0])
-
-            self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
 
         return spins
 
