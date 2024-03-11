@@ -238,13 +238,27 @@ class Ising:
             sb_tensor = tensor
         return sb_tensor
 
+    def program_weight(
+        self,
+        weight: int,
+        addr: int,
+        retries: int = 5
+    ) -> None:
+        written = self.ising_lib.write_ising(weight, addr)
+        tries = 0
+        if (written != weight) and (tries < retries):
+            written = self.ising_lib.write_ising(weight, addr)
+        assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
+                                    hex(addr) + " but read " + hex(written)
+
     def program_digital_ising(
         self,
         order: List[int],
         autoscale: bool = False, # Scale weights to fit in the ising machine range.
                                  # If false, warn on weights that don't match.
-        automerge: bool = True   # For models smaller than 1/2 the solver size, merge
+        automerge: bool = True,  # For models smaller than 1/2 the solver size, merge
                                  # mutliple spins into multi-spin chunks.
+        retries: int = 5         # Number of times to retry a failed weight program 
     ) -> None:
         """
         Program the Digital Ising Machine using the provided Ising
@@ -286,9 +300,7 @@ class Ising:
                     addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
                 else:
                     addr = 0x01000000 + (order[i] << 13) + (order[j] << 2)
-                written = self.ising_lib.write_ising(weight, addr)
-                assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
-                                            hex(addr) + " but read " + hex(written)
+                self.program_weight(weight, addr)
 
             if (i < h_list.shape[0]):
                 weight_val = h_list[i]
@@ -300,9 +312,7 @@ class Ising:
             else:
                 weight = default_weight
             addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2);
-            written = self.ising_lib.write_ising(weight, addr)
-            assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
-                                        hex(addr) + " but read " + hex(written)
+            self.program_weight(weight, addr)
 
         return order
 
@@ -341,7 +351,7 @@ class Ising:
         ----------
         agents  : int
             Number of times to run the solver.
-            TODOmax glendale: Parallelism is not supported right now.
+            TODO: Parallelism is not supported right now.
         counter_cutoff : int 
             The phase counter value at which a spin is considered "in phase"
             with the local field potential.
@@ -360,7 +370,6 @@ class Ising:
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
             finish = time.time()
             self.time_elapsed += finish - start
-            # TODO: Stopping the ising machine should not also reset the weights
             for i in range(len(self.J) * mult):
                 if (i % mult == 0):
                     merged = np.zeros(mult)
@@ -434,7 +443,8 @@ class Ising:
         counter_cutoff: int = 0x00004000,
         counter_max: int = 0x00008000,
         time_ms: int = 1000,
-        shuffle_spins: bool = False
+        shuffle_spins: bool = False,
+        weight_program_retries: int = 5
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -589,7 +599,8 @@ class Ising:
             order = self.program_digital_ising(
                  autoscale = autoscale,
                  automerge = automerge,
-                 order = order
+                 order = order,
+                 retries = weight_program_retries
             )
             spins = self.run_digital_ising(
                  agents = agents,

@@ -28,6 +28,12 @@ num_den_sweep = int(sys.argv[3])
 density_points = np.linspace(0, 0.9, num_den_sweep)
 f = open("data.csv", "w+")
 
+# TODO: This is a workaround to an issue where repeatedly re-initializing
+# the FPGA occasionally causes errors.
+J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
+h = torch.randint(-7, 8, (63,), dtype=torch.float32)
+ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+
 for sparsity in density_points:
     #Run num_tests J matrixes.
     for tests in range(num_tests):
@@ -43,7 +49,8 @@ for sparsity in density_points:
         J = torch.round((J + J.t()) / 2)
 
         h = torch.randint(-7, 8, (63,), dtype=torch.float32)
-        ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+        ising.J = J
+        ising.h = h
     
         # Use the simulated bifurcation algorithm to get a baseline solution.
         ising.minimize(
