@@ -73,7 +73,7 @@ ax.plot(spars, means, color = "black", label = "Average Normalized Solution Qual
 ax.hlines(1, 0.1, 1, color = "black", linestyles="dashed")
 ax.legend()
 
-ax.set_ylabel("Normalized Solution Energy")
+ax.set_ylabel("Normalized Solution Quality")
 ax.set_xlabel("Graph Density")
 #ax.set_yscale('log')
 
