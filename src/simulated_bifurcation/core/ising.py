@@ -341,7 +341,7 @@ class Ising:
         order: List[int],
         agents: int = 1,
         counter_cutoff: int = 0x00004000,
-        time_ms: int = 1000,
+        time_ms: float = 1000.0,
         automerge: bool = True
     ) -> List[int]:
         """
@@ -366,7 +366,7 @@ class Ising:
         for j in range(agents):
             start = time.time()
             self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
-            sleep(time_ms / 1000)
+            sleep(time_ms / 1000.0)
             self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
             finish = time.time()
             self.time_elapsed += finish - start
@@ -442,7 +442,7 @@ class Ising:
         automerge: bool = True,
         counter_cutoff: int = 0x00004000,
         counter_max: int = 0x00008000,
-        time_ms: int = 1000,
+        time_ms: float = 1000.0,
         shuffle_spins: bool = False,
         weight_program_retries: int = 5
     ) -> None:
