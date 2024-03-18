@@ -11,10 +11,8 @@ from simulated_bifurcation.optimizer import (
     SimulatedBifurcationOptimizer,
 )
 
-# Runs num_tests tests at each different coupling density.
-# For each test, runs num_trials trials, and calculates the
-# success probability, defined as the number of trials that
-# achieve 95% as good of a hamiltonian as the reference.
+# Runs num_tests tests at each different coupling densities.
+# For each test, runs num_trials trials.
 
 if (len(sys.argv) != 4):
     print("should be run as:") 
