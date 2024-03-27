@@ -242,14 +242,17 @@ class Ising:
         self,
         weight: int,
         addr: int,
-        retries: int = 5
+        retries: int = 5,
+        error : bool = True      # Throw an error if read value != written value.
+                                 # Set to false if writing to a non-readable addr. 
     ) -> None:
         written = self.ising_lib.write_ising(weight, addr)
-        tries = 0
-        if (written != weight) and (tries < retries):
-            written = self.ising_lib.write_ising(weight, addr)
-        assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
-                                    hex(addr) + " but read " + hex(written)
+        if error:
+            tries = 0
+            if (written != weight) and (tries < retries):
+                written = self.ising_lib.write_ising(weight, addr)
+            assert(written == weight), "ERROR: Wrote " + hex(weight) + " to addr " +\
+                                        hex(addr) + " but read " + hex(written)
 
     def program_digital_ising(
         self,
@@ -267,7 +270,9 @@ class Ising:
         Digital Ising Machine contains digital_ising_size physical
         spins. The final spin is the local field potential.
         """
-        J_list = self.symmetrize(self.J).numpy()
+        J_list = self.J.numpy() # Don't symmetrize, we support asymmetric coupling
+                                # Diagonals currently represent initial spins
+                                # This might be a dumb way to represent that!
         h_list = self.h.numpy()
 
         if automerge:
@@ -281,26 +286,23 @@ class Ising:
             J_list *= scale
             h_list *= scale
 
-        default_weight = 1 << int(self.weight_scale/2)
+        default_weight = int(self.weight_scale/2)
         valid_weights  = range(-int(self.weight_scale/2), int(self.weight_scale/2) + 1)
 
         for i in range(0, self.digital_ising_size - 1):
-            for j in range(i + 1, self.digital_ising_size - 1):
+            for j in range(0, self.digital_ising_size - 1):
                 if (i < J_list.shape[0]) and (j < J_list.shape[1]):
                     weight_val = J_list[i][j]
                     if weight_val not in valid_weights:
                         warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
                         if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                         if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                    weight = 1 << int(int(weight_val) + int(self.weight_scale/2))
+                    weight = int(int(weight_val) + int(self.weight_scale/2))
                 else:
                     weight = default_weight
-                # Ising machine always expects larger index first
-                if order[j] > order[i]:
-                    addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
-                else:
-                    addr = 0x01000000 + (order[i] << 13) + (order[j] << 2)
-                self.program_weight(weight, addr)
+                addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
+                readable = (j != i)
+                self.program_weight(weight, addr, retries = retries, error = readable)
 
             if (i < h_list.shape[0]):
                 weight_val = h_list[i]
@@ -308,10 +310,13 @@ class Ising:
                     warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
                     if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                     if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                weight = 1 << int(int(self.weight_scale/2) - int(weight_val))
+                weight = int(int(self.weight_scale/2) - int(weight_val))
             else:
                 weight = default_weight
-            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2);
+            # TODO: How to represent an asymmetric H?
+            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2 );
+            self.program_weight(weight, addr)
+            addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
             self.program_weight(weight, addr)
 
         return order
@@ -341,7 +346,7 @@ class Ising:
         order: List[int],
         agents: int = 1,
         counter_cutoff: int = 0x00004000,
-        time_ms: float = 1000.0,
+        cycles: int = 1000,
         automerge: bool = True
     ) -> List[int]:
         """
@@ -365,22 +370,21 @@ class Ising:
         spins = [[] for _ in range(len(self.J))]
         for j in range(agents):
             start = time.time()
-            self.ising_lib.write_ising(0x00000001, 0x00000500) # Start
-            sleep(time_ms / 1000.0)
-            self.ising_lib.write_ising(0x00000000, 0x00000500) # Stop
+            self.ising_lib.write_ising(cycles, 0x00000500) # Start
+            time.sleep(0.0001)
             finish = time.time()
             self.time_elapsed += finish - start
             for i in range(len(self.J) * mult):
                 if (i % mult == 0):
                     merged = np.zeros(mult)
 
-                index = self.digital_ising_size - order[i] - 1
+                index = order[i]
                 addr = 0x00001000 + (index << 2)
                 value = self.ising_lib.read_ising(addr)
                 spin = 1 if (value > counter_cutoff) else -1
                 merged[i % mult] = spin
 
-                if (i % mult == (mult-1)):    
+                if (i % mult == (mult-1)): 
                     if(merged != merged[0]).all():
                         warnings.warn("Merged spins don't match for elem "+str(i))
                     spins[int(i / mult)].append(merged[0])
@@ -442,7 +446,7 @@ class Ising:
         automerge: bool = True,
         counter_cutoff: int = 0x00004000,
         counter_max: int = 0x00008000,
-        time_ms: float = 1000.0,
+        cycles: int = 1000,
         shuffle_spins: bool = False,
         weight_program_retries: int = 5
     ) -> None:
@@ -605,7 +609,7 @@ class Ising:
             spins = self.run_digital_ising(
                  agents = agents,
                  counter_cutoff = counter_cutoff,
-                 time_ms = time_ms,
+                 cycles = cycles,
                  automerge = automerge,
                  order = order
             )
