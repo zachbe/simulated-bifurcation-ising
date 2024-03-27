@@ -26,7 +26,7 @@ num_trials = int(sys.argv[2])
 num_den_sweep = int(sys.argv[3])
 
 density_points = np.linspace(0, 0.9, num_den_sweep)
-f = open("data.csv", "w+")
+f = open("data_density.csv", "w+")
 
 # TODO: This is a workaround to an issue where repeatedly re-initializing
 # the FPGA occasionally causes errors.
@@ -84,7 +84,7 @@ for sparsity in density_points:
                 sampling_period=50,
                 convergence_threshold=50,
                 use_fpga = True,
-                time_ms = 100,
+                cycles = 10000,
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()
