@@ -25,8 +25,8 @@ num_tests = int(sys.argv[1])
 num_trials = int(sys.argv[2])
 num_time_sweep = int(sys.argv[3])
 
-# From 0 to 1ms
-time_points = np.linspace(0, 1, num_time_sweep)
+# From 0 to 1000 cycles
+time_points = np.linspace(0, 1000, num_time_sweep)
 f = open("data_time.csv", "w+")
 
 # TODO: This is a workaround to an issue where repeatedly re-initializing
@@ -77,12 +77,12 @@ for time in time_points:
                 sampling_period=50,
                 convergence_threshold=50,
                 use_fpga = True,
-                time_ms = time,
+                cycles = time,
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()
             print(".")
-            f.write(str(ising.time_elapsed)+",")
+            f.write(str(time)+",")
             f.write(str(fpga_energy[0].item())+",")
 
         f.write("\n")

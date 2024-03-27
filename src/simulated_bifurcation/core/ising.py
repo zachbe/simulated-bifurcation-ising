@@ -370,7 +370,7 @@ class Ising:
         spins = [[] for _ in range(len(self.J))]
         for j in range(agents):
             start = time.time()
-            self.ising_lib.write_ising(cycles, 0x00000500) # Start
+            self.ising_lib.write_ising(int(cycles), 0x00000500) # Start
             time.sleep(0.0001)
             finish = time.time()
             self.time_elapsed += finish - start
