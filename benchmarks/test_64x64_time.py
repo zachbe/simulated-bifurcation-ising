@@ -25,8 +25,8 @@ num_tests = int(sys.argv[1])
 num_trials = int(sys.argv[2])
 num_time_sweep = int(sys.argv[3])
 
-# From 0 to 100000 cycles
-time_points = np.logspace(0, 5, num=num_time_sweep)
+# From 0 to 5000 cycles
+time_points = np.linspace(0, 5000, num=num_time_sweep)
 f = open("data_time.csv", "w+")
 
 # TODO: This is a workaround to an issue where repeatedly re-initializing
