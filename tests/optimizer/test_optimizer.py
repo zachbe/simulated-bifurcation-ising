@@ -10,7 +10,7 @@ from src.simulated_bifurcation.optimizer import (
     SimulatedBifurcationOptimizer,
 )
 
-def test_optimizer_fpga():
+def test_optimizer_fpga_basic():
     J = torch.tensor(
         [
             [ 1,  0, -1, -1,  0,  0],
@@ -46,7 +46,7 @@ def test_optimizer_fpga():
         sampling_period=50,
         convergence_threshold=50,
         use_fpga = True,
-        time_ms = 0,
+        cycles = 1000,
         shuffle_spins = True
     )
     assert torch.equal(expected_data, ising.computed_spins)
@@ -80,7 +80,7 @@ def test_optimizer_fpga_rand():
         sampling_period=50,
         convergence_threshold=50,
         use_fpga = True,
-        time_ms = 0,
+        cycles = 10000,
         shuffle_spins = True
     )
     fpga_elapsed = ising.time_elapsed

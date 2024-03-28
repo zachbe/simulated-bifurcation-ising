@@ -25,7 +25,7 @@ all_spar = {}
 row_id = 0
 
 # Parse data from CSV
-with open('data.csv', newline = "\n") as data:
+with open('data_density.csv', newline = "\n") as data:
     reader = csv.reader(data, delimiter=",")
     for row in reader:
         sparsity_row = 1 - float(row[0])

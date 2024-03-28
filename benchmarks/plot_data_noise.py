@@ -49,7 +49,7 @@ for (en, sp) in zip(energy[1:], row_index[1:]):
     ax.scatter(sp, en, color=c, s = 20)
 
 ax.hlines(1, 0, 10, color = "black", linestyles="dashed")
-ax.set_ylim([0.5, 1.2])
+#ax.set_ylim([0.5, 1.2])
 ax.legend()
 
 ax.set_ylabel("Normalized Solution Quality")
