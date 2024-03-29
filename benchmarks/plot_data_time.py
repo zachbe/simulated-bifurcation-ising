@@ -70,7 +70,7 @@ for (en, sp) in zip(energy[1:], sparsity[1:]):
 
 ax.fill_between(spars, lows, highs, fc = (1, 0, 0, 0.5), ec = (0.5,0,0,1), lw=1, linestyles = "dashed", label = "Std Dev, Solution Quality")
 ax.plot(spars, means, color = "black", label = "Average Normalized Solution Quality")
-ax.hlines(1, 0, 20, color = "black", linestyles="dashed")
+ax.hlines(1, 0, 10, color = "black", linestyles="dashed")
 ax.legend()
 
 ax.set_ylabel("Normalized Solution Quality")
