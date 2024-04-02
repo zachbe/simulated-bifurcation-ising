@@ -31,9 +31,8 @@ check  = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
 
 
 # Make a noisy version of smiley
-smiley = np.array(smiley)
-noise = np.random.randint(20, size=(8,8))
-smiley_noise = [[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
+noise = np.random.randint(10, size=(8,8))
+smiley_noise = [[-s if n == 0 and s == 1 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
 
 # Compute the weights for the hopfield network
 smiley_1d = smiley.reshape(64)
@@ -72,4 +71,5 @@ ax3.imshow(smiley_noise, interpolation='nearest', cmap='plasma')
 ax4 = plt.subplot(2, 2, 4)
 ax4.imshow(smiley_out, interpolation='nearest', cmap='plasma')
 
-plt.show()
+#plt.show()
+plt.savefig("hopfield.png")
