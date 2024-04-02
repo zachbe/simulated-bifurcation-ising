@@ -281,7 +281,10 @@ class Ising:
             h_list = np.kron(h_list, np.ones(mult))
        
         if autoscale:
-            max_val = max((np.max(np.absolute(J_list)), np.max(np.absolute(h_list))))
+            if self.linear_term:
+                max_val = max((np.max(np.absolute(J_list)), np.max(np.absolute(h_list))))
+            else:
+                max_val = np.max(np.absolute(J_list))
             scale = int(self.weight_scale/2) / max_val
             J_list *= scale
             h_list *= scale
@@ -304,20 +307,21 @@ class Ising:
                 readable = (j != i)
                 self.program_weight(weight, addr, retries = retries, error = readable)
 
-            if (i < h_list.shape[0]):
-                weight_val = h_list[i]
-                if weight_val not in valid_weights:
-                    warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
-                    if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
-                    if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                weight = int(int(self.weight_scale/2) - int(weight_val))
-            else:
-                weight = default_weight
-            # TODO: How to represent an asymmetric H?
-            addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2 );
-            self.program_weight(weight, addr)
-            addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
-            self.program_weight(weight, addr)
+            if self.linear_term:
+                if (i < h_list.shape[0]):
+                    weight_val = h_list[i]
+                    if weight_val not in valid_weights:
+                        warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
+                        if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
+                        if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
+                    weight = int(int(self.weight_scale/2) - int(weight_val))
+                else:
+                    weight = default_weight
+                # TODO: How to represent an asymmetric H?
+                addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2 );
+                self.program_weight(weight, addr)
+                addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
+                self.program_weight(weight, addr)
 
         return order
 
@@ -591,7 +595,8 @@ class Ising:
 
         """
         if use_fpga:
-            order = np.arange(self.digital_ising_size - 1) 
+            if self.linear_term: order = np.arange(self.digital_ising_size - 1) 
+            else               : order = np.arange(self.digital_ising_size    ) 
             if shuffle_spins: np.random.shuffle(order)
             order = order.tolist() # for typing reasons
             order = [int(_) for _ in order] # for typing reasons
