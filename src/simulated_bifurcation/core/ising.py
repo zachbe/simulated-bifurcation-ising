@@ -261,7 +261,8 @@ class Ising:
                                  # If false, warn on weights that don't match.
         automerge: bool = True,  # For models smaller than 1/2 the solver size, merge
                                  # mutliple spins into multi-spin chunks.
-        retries: int = 5         # Number of times to retry a failed weight program 
+        retries: int = 5,        # Number of times to retry a failed weight program 
+        initial_spins: [ndarray, None] = None
     ) -> None:
         """
         Program the Digital Ising Machine using the provided Ising
@@ -270,15 +271,16 @@ class Ising:
         Digital Ising Machine contains digital_ising_size physical
         spins. The final spin is the local field potential.
         """
+        self.remove_diagonal_(self.J)
         J_list = self.J.numpy() # Don't symmetrize, we support asymmetric coupling
-                                # Diagonals currently represent initial spins
-                                # This might be a dumb way to represent that!
         h_list = self.h.numpy()
 
         if automerge:
-            mult = int(self.digital_ising_size/J_list.shape[0])
+            mult   = int(self.digital_ising_size/J_list.shape[0])
             J_list = np.kron(J_list, np.ones((mult,mult)))
             h_list = np.kron(h_list, np.ones(mult))
+            if initial_spins is not None:
+                initial_spins = np.kron(initial_spins, np.ones(mult))
        
         if autoscale:
             if self.linear_term:
@@ -294,18 +296,22 @@ class Ising:
 
         for i in range(0, self.digital_ising_size - 1):
             for j in range(0, self.digital_ising_size - 1):
-                if (i < J_list.shape[0]) and (j < J_list.shape[1]):
-                    weight_val = J_list[i][j]
-                    if weight_val not in valid_weights:
-                        warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
-                        if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
-                        if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
-                    weight = int(int(weight_val) + int(self.weight_scale/2))
+                if (i != j):
+                    if (i < J_list.shape[0]) and (j < J_list.shape[1]):
+                        weight_val = J_list[i][j]
+                        if weight_val not in valid_weights:
+                            warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
+                            if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
+                            if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
+                        weight = int(int(weight_val) + int(self.weight_scale/2))
+                    else:
+                        weight = default_weight
+                    addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
+                    self.program_weight(weight, addr, retries = retries, error = True)
                 else:
-                    weight = default_weight
-                addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
-                readable = (j != i)
-                self.program_weight(weight, addr, retries = retries, error = readable)
+                    spin = 1 if (initial_spins is None or initial_spins[i] == 1) else 0
+                    addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
+                    self.program_weight(spin, addr, retries = retries, error = False) #TODO: can't read spins
 
             if self.linear_term:
                 if (i < h_list.shape[0]):
@@ -322,6 +328,7 @@ class Ising:
                 self.program_weight(weight, addr)
                 addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
                 self.program_weight(weight, addr)
+                # TODO: initial H value is not programmed
 
         return order
 
@@ -452,7 +459,8 @@ class Ising:
         counter_max: int = 0x00008000,
         cycles: int = 1000,
         shuffle_spins: bool = False,
-        weight_program_retries: int = 5
+        weight_program_retries: int = 5,
+        initial_spins: [ndarray, None] = None
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -609,7 +617,8 @@ class Ising:
                  autoscale = autoscale,
                  automerge = automerge,
                  order = order,
-                 retries = weight_program_retries
+                 retries = weight_program_retries,
+                 initial_spins = initial_spins
             )
             spins = self.run_digital_ising(
                  agents = agents,
