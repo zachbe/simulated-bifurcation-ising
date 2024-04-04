@@ -29,16 +29,15 @@ check  = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
                    [-1, -1, -1,  1, -1, -1, -1, -1],
                    [-1, -1, -1, -1, -1, -1, -1, -1]])
 
-
 # Make a noisy version of smiley
-noise = np.random.randint(20, size=(8,8))
-smiley_noise = [[s if n == 0 else -s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
+noise = np.random.randint(15, size=(8,8))
+smiley_noise = [[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
 smiley_noise = np.array(smiley_noise)
 smiley_noise_1d = smiley_noise.reshape(64)
 
 # Make a noisy version of check
-noise = np.random.randint(20, size=(8,8))
-check_noise = [[c if n == 0 else -c for c, n in zip(ch, no)] for ch, no in zip(check, noise)]
+noise = np.random.randint(15, size=(8,8))
+check_noise = [[-c if n == 0 else c for c, n in zip(ch, no)] for ch, no in zip(check, noise)]
 check_noise = np.array(check_noise)
 check_noise_1d = check_noise.reshape(64)
 
