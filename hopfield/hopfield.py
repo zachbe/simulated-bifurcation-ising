@@ -30,13 +30,13 @@ check  = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
                    [-1, -1, -1, -1, -1, -1, -1, -1]])
 
 # Make a noisy version of smiley
-noise = np.random.randint(15, size=(8,8))
+noise = np.random.randint(10, size=(8,8))
 smiley_noise = [[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
 smiley_noise = np.array(smiley_noise)
 smiley_noise_1d = smiley_noise.reshape(64)
 
 # Make a noisy version of check
-noise = np.random.randint(15, size=(8,8))
+noise = np.random.randint(10, size=(8,8))
 check_noise = [[-c if n == 0 else c for c, n in zip(ch, no)] for ch, no in zip(check, noise)]
 check_noise = np.array(check_noise)
 check_noise_1d = check_noise.reshape(64)
@@ -53,6 +53,9 @@ for i in range(64):
 
 ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 
+# DIMPLE params
+cycles = 100
+
 # Use DIMPLE to recall smiley
 ising.minimize(
     1,
@@ -65,7 +68,7 @@ ising.minimize(
     convergence_threshold=50,
     use_fpga = True,
     shuffle_spins = True,
-    cycles = 1000000,
+    cycles = cycles,
     initial_spins = smiley_noise_1d
 )
 smiley_out = ising.computed_spins.numpy().reshape((8,8))
@@ -82,7 +85,7 @@ ising.minimize(
     convergence_threshold=50,
     use_fpga = True,
     shuffle_spins = True,
-    cycles = 1000000,
+    cycles = cycles,
     initial_spins = check_noise_1d
 )
 check_out = ising.computed_spins.numpy().reshape((8,8))
