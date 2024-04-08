@@ -72,6 +72,7 @@ for i in range(len(cycles)):
     ax.imshow(smilies_out[i], interpolation='nearest')
     sec = cycles[i]*4
     ax.title.set_text(f"{sec} ns")
+    ax.axis("off")
 
 #plt.show()
 plt.tight_layout()
