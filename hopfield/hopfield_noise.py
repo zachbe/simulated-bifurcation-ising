@@ -44,7 +44,7 @@ ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 # DIMPLE params
 noises = [  2,  4,  6,  8, 10,  12,  14,  16,  18, 20 ]
 cycles = [  0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200 ]
-num_tests = 3
+num_tests = 10
 
 # Make a bunch of noisy versions of smiley
 smilies = [[] for _ in noises]
@@ -73,11 +73,12 @@ for k in range(len(noises)):
             )
             smiley_out = ising.computed_spins.numpy().reshape(64)
             smilies_out[k][i] = smiley_out.reshape((8,8))
-            #print(smiley_out)
-            #print(smiley_1d)
-            #print("---")
             scores_out[k][i].append(min(np.sum(np.abs(smiley_out - smiley_1d)),
                                         np.sum(np.abs(smiley_out + smiley_1d))))
+            print(j)
+        print("Cycles: " + str(cycles[i]))
+    print("Noises: " + str(noises[k]))
+
 
 f = open("data_noise.csv", "w+")
 for n in scores_out:
@@ -86,13 +87,3 @@ for n in scores_out:
             f.write(str(t)+",")
         f.write("\n")
     f.write("\n")
-
-# Show images
-for j in range(len(noises)):
-    for i in range(len(cycles)):
-        ax = plt.subplot(len(noises), len(cycles), i+(j * len(cycles))+1)
-        ax.imshow(smilies_out[j][i], interpolation='nearest')
-
-#plt.show()
-plt.tight_layout()
-plt.savefig("hopfield_test.png", dpi=200)
