@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 from simulated_bifurcation import ConvergenceWarning, reset_env, set_env
 from simulated_bifurcation.core import Ising
@@ -42,17 +43,18 @@ for i in range(64):
 ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 
 # DIMPLE params
-noises = [  2,  4,  6,  8, 10,  12,  14,  16,  18, 20 ]
+noises = [  5, 10, 15, 20 ]
 cycles = [  0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200 ]
-num_tests = 10
+num_tests = 25
 
 # Make a bunch of noisy versions of smiley
 smilies = [[] for _ in noises]
 for i in range(len(noises)):
     for j in range(num_tests):
-        noise = np.random.randint(noises[i], size=(8,8))
-        smiley_noise = [[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
-        smiley_noise_1d = np.array(smiley_noise).reshape(64)
+        noise = np.zeros(64)
+        while np.sum(noise) < noises[i]:
+            noise[random.randint(0,63)] = 1
+        smiley_noise_1d = [-s if n == 0 else s for s, n in zip(smiley_1d, noise)]
         smilies[i].append(smiley_noise_1d)
 
 # Use DIMPLE to recall smiley
@@ -69,7 +71,7 @@ for k in range(len(noises)):
                 shuffle_spins = True,
                 cycles = cycles[i],
                 initial_spins = smilies[k][j],
-                reprogram_J = True#((i == 0) and (j == 0) and (k == 0))
+                reprogram_J = True
             )
             smiley_out = ising.computed_spins.numpy().reshape(64)
             smilies_out[k][i] = smiley_out.reshape((8,8))
