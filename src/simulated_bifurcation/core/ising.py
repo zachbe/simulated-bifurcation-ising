@@ -460,7 +460,8 @@ class Ising:
         cycles: int = 1000,
         shuffle_spins: bool = False,
         weight_program_retries: int = 5,
-        initial_spins: [ndarray, None] = None
+        initial_spins: [ndarray, None] = None,
+        reprogram_J = True
     ) -> None:
         """
         Minimize the energy of the Ising model using the Simulated Bifurcation
@@ -609,17 +610,18 @@ class Ising:
             order = order.tolist() # for typing reasons
             order = [int(_) for _ in order] # for typing reasons
             self.time_elapsed = 0
-            self.configure_digital_ising(
-                 counter_cutoff = counter_cutoff,
-                 counter_max = counter_max
-            )
-            order = self.program_digital_ising(
-                 autoscale = autoscale,
-                 automerge = automerge,
-                 order = order,
-                 retries = weight_program_retries,
-                 initial_spins = initial_spins
-            )
+            if reprogram_J:
+                self.configure_digital_ising(
+                     counter_cutoff = counter_cutoff,
+                     counter_max = counter_max
+                )
+                order = self.program_digital_ising(
+                     autoscale = autoscale,
+                     automerge = automerge,
+                     order = order,
+                     retries = weight_program_retries,
+                     initial_spins = initial_spins
+                )
             spins = self.run_digital_ising(
                  agents = agents,
                  counter_cutoff = counter_cutoff,

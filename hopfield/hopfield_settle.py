@@ -60,7 +60,8 @@ for i in range(len(cycles)):
         use_fpga = True,
         shuffle_spins = False,
         cycles = cycles[i],
-        initial_spins = smiley_noise_1d
+        initial_spins = smiley_noise_1d,
+        reprogram_J = (i == 0)
     )
     smilies_out.append(ising.computed_spins.numpy().reshape((8,8)))
 
