@@ -8,7 +8,7 @@ import statistics as stat
 # DIMPLE params
 noises = [  5, 10, 15, 20 ]
 cycles = [  20, 40, 60, 80, 100, 120]
-num_tests = 25
+num_tests = 50
 
 # Parse data from CSV
 data = [[[],[]] for _ in noises]
@@ -49,7 +49,7 @@ color = iter(plt.cm.cool(np.linspace(0, 1, len(noises))))
 
 for i in range(len(data)):
     c = next(color)
-    ax.scatter(data[i][1], data[i][0], color=c, s = 10*(len(data) - i))
+    ax.scatter(data[i][1], data[i][0], color=c, s = 10*(2**(len(data) - i)))
     ax.plot(avg[i][1], avg[i][0], color=c, label=f"Noise Level: {noises[i]}")
 
 ax.legend()
