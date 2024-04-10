@@ -6,9 +6,9 @@ import numpy as np
 import statistics as stat
 
 # DIMPLE params
-noises = [  2,  4,  6,  8, 10,  12,  14,  16,  18, 20 ]
-cycles = [  0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200 ]
-num_tests = 10
+noises = [  5, 10, 15, 20 ]
+cycles = [  20, 40, 60, 80, 100, 120]
+num_tests = 25
 
 # Parse data from CSV
 data = [[[],[]] for _ in noises]
@@ -43,17 +43,16 @@ with open('data_noise.csv', newline = "\n") as f:
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
-ax.hlines(1, 20, 800, color = "black", linestyles="dashed")
+ax.hlines(1, 20*4, 120*4, color = "black", linestyles="dashed")
 
-color = iter(plt.cm.gist_rainbow(np.linspace(0, 1, len(noises))))
+color = iter(plt.cm.cool(np.linspace(0, 1, len(noises))))
 
 for i in range(len(data)):
     c = next(color)
-    ax.scatter(data[i][1], data[i][0], color=c, s = 20)
-    ax.plot(avg[i][1], avg[i][0], color=c)
-#    ax.fill_between(avg[i][1], low[i], high[i], fc = c, ec = c, lw = 1, linestyles = "dashed", alpha = 0.5)
+    ax.scatter(data[i][1], data[i][0], color=c, s = 10*(len(data) - i))
+    ax.plot(avg[i][1], avg[i][0], color=c, label=f"Noise Level: {noises[i]}")
 
-#ax.legend()
+ax.legend()
 
 ax.set_ylabel("Accuracy")
 ax.set_xlabel("Settling Time (ns)")
