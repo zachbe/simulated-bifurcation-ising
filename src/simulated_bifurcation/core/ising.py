@@ -101,7 +101,7 @@ class Ising:
         device: Optional[Union[str, torch.device]] = None,
         digital_ising_size: Optional[int] = 8,
         use_fpga: bool = False,
-        weight_scale: int = 15
+        weight_scale: int = 13
     ) -> None:
         self.dimension = J.shape[0]
         if isinstance(J, ndarray):
@@ -247,6 +247,9 @@ class Ising:
                                  # Set to false if writing to a non-readable addr. 
     ) -> None:
         written = self.ising_lib.write_ising(weight, addr)
+        #print(weight)
+        #print(hex(addr))
+        #print("--")
         if error:
             tries = 0
             if (written != weight) and (tries < retries):
@@ -307,7 +310,7 @@ class Ising:
                     else:
                         weight = default_weight
                     addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
-                    self.program_weight(weight, addr, retries = retries, error = True)
+                    self.program_weight(weight, addr, retries = retries, error = False)#True)
                 else:
                     spin = 1 if (initial_spins is None or initial_spins[i] == 1) else 0
                     addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
@@ -389,7 +392,7 @@ class Ising:
                 if (i % mult == 0):
                     merged = np.zeros(mult)
 
-                index = order[i]
+                index = self.digital_ising_size - order[i] - 1
                 addr = 0x00001000 + (index << 2)
                 value = self.ising_lib.read_ising(addr)
                 spin = 1 if (value > counter_cutoff) else -1

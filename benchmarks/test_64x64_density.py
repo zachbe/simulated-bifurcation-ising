@@ -28,8 +28,8 @@ f = open("data_density.csv", "w+")
 
 # TODO: This is a workaround to an issue where repeatedly re-initializing
 # the FPGA occasionally causes errors.
-J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
-h = torch.randint(-7, 8, (63,), dtype=torch.float32)
+J = torch.randint(-6, 7, (63,63), dtype=torch.float32)
+h = torch.randint(-6, 7, (63,), dtype=torch.float32)
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
 
 for sparsity in density_points:
@@ -37,7 +37,7 @@ for sparsity in density_points:
     for tests in range(num_tests):
     
         # Pick random integer couplings.
-        J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
+        J = torch.randint(-6, 7, (63,63), dtype=torch.float32)
 
         # Sparsify J, then symmetrize
         s = torch.empty((63, 63))
@@ -46,7 +46,7 @@ for sparsity in density_points:
         J = torch.mul(J, s)
         J = torch.round((J + J.t()) / 2)
 
-        h = torch.randint(-7, 8, (63,), dtype=torch.float32)
+        h = torch.randint(-6, 7, (63,), dtype=torch.float32)
         ising.J = J
         ising.h = h
     
@@ -86,7 +86,7 @@ for sparsity in density_points:
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()
-            print(".")
+            print(f"{sparsity} {tests} {trial}")
             f.write(str(fpga_energy[0].item())+",")
 
         f.write("\n")
