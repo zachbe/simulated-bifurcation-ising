@@ -82,7 +82,7 @@ for sparsity in density_points:
                 sampling_period=50,
                 convergence_threshold=50,
                 use_fpga = True,
-                cycles = 100000,
+                cycles = 100000000,
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()

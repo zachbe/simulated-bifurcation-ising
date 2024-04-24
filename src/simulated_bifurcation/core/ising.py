@@ -310,11 +310,11 @@ class Ising:
                     else:
                         weight = default_weight
                     addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
-                    self.program_weight(weight, addr, retries = retries, error = False)#True)
+                    self.program_weight(weight, addr, retries = retries, error = True)
                 else:
                     spin = 1 if (initial_spins is None or initial_spins[i] == 1) else 0
                     addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
-                    self.program_weight(spin, addr, retries = retries, error = False) #TODO: can't read spins
+                    self.program_weight(spin, addr, retries = retries, error = True)
 
             if self.linear_term:
                 if (i < h_list.shape[0]):
@@ -385,7 +385,7 @@ class Ising:
         for j in range(agents):
             start = time.time()
             self.ising_lib.write_ising(int(cycles), 0x00000500) # Start
-            time.sleep(0.0001)
+            time.sleep(0.01)
             finish = time.time()
             self.time_elapsed += finish - start
             for i in range(len(self.J) * mult):
