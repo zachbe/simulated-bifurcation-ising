@@ -31,7 +31,7 @@ check  = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
 
 # Make a noisy version of smiley
 noise = np.random.randint(10, size=(8,8))
-smiley_noise = [[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
+smiley_noise = smiley #[[-s if n == 0 else s for s, n in zip(sm, no)] for sm, no in zip(smiley, noise)]
 smiley_noise = np.array(smiley_noise)
 smiley_noise_1d = smiley_noise.reshape(64)
 
@@ -48,7 +48,7 @@ for i in range(64):
 ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 
 # DIMPLE params
-cycles = [20, 40, 60, 80, 100]
+cycles = [20, 40, 60, 80, 100, 200, 400, 800, 1000]
 
 # Use DIMPLE to recall smiley in steps
 smilies_out = [smiley_noise]

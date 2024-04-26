@@ -80,7 +80,7 @@ def test_optimizer_fpga_rand():
         sampling_period=50,
         convergence_threshold=50,
         use_fpga = True,
-        cycles = 10000,
+        cycles = 10000000,
         shuffle_spins = True
     )
     fpga_elapsed = ising.time_elapsed
