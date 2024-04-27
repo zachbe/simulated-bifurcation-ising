@@ -46,15 +46,15 @@ def test_optimizer_fpga_basic():
         sampling_period=50,
         convergence_threshold=50,
         use_fpga = True,
-        cycles = 1000,
+        cycles = 10000,
         shuffle_spins = False #True
     )
     assert torch.equal(expected_data, ising.computed_spins)
 
 def test_optimizer_fpga_rand():
-    J = torch.randint(-6, 7, (63,63), dtype=torch.float32)
+    J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
     J = torch.round((J + J.t()) / 2)
-    h = torch.randint(-6, 7, (63,), dtype=torch.float32)
+    h = torch.randint(-7, 8, (63,), dtype=torch.float32)
     ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
     ising.minimize(
         1,

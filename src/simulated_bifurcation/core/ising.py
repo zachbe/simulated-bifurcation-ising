@@ -101,7 +101,7 @@ class Ising:
         device: Optional[Union[str, torch.device]] = None,
         digital_ising_size: Optional[int] = 8,
         use_fpga: bool = False,
-        weight_scale: int = 13
+        weight_scale: int = 15
     ) -> None:
         self.dimension = J.shape[0]
         if isinstance(J, ndarray):
@@ -309,7 +309,8 @@ class Ising:
                         weight = int(int(weight_val) + int(self.weight_scale/2))
                     else:
                         weight = default_weight
-                    addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
+                    if (order[i] > order[j]): addr = 0x01000000 + (order[i] << 13) + (order[j] << 2)
+                    else                    : addr = 0x01000000 + (order[j] << 13) + (order[i] << 2)
                     self.program_weight(weight, addr, retries = retries, error = True)
                 else:
                     spin = 1 if (initial_spins is None or initial_spins[i] == 1) else 0
@@ -329,8 +330,8 @@ class Ising:
                 # TODO: How to represent an asymmetric H?
                 addr = 0x01000000 + ((self.digital_ising_size - 1)<<13) + (order[i] << 2 );
                 self.program_weight(weight, addr)
-                addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
-                self.program_weight(weight, addr)
+                #addr = 0x01000000 + ((self.digital_ising_size - 1)<<2 ) + (order[i] << 13);
+                #self.program_weight(weight, addr)
                 # TODO: initial H value is not programmed
 
         return order
