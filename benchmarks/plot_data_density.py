@@ -72,6 +72,7 @@ ax.fill_between(spars, lows, highs, fc = (1, 0, 0, 0.5), ec = (0.5,0,0,1), lw=1,
 ax.plot(spars, means, color = "black", label = "Average Normalized Solution Quality")
 ax.hlines(1, 0.1, 1, color = "black", linestyles="dashed")
 ax.legend()
+ax.set_ylim([0, 1.2])
 
 ax.set_ylabel("Normalized Solution Quality")
 ax.set_xlabel("Graph Density")
