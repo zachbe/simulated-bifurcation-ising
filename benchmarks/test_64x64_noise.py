@@ -72,11 +72,11 @@ for tests in range(num_tests):
             sampling_period=50,
             convergence_threshold=50,
             use_fpga = True,
-            cycles = 1000,
+            cycles = 100000000,
             shuffle_spins = False
         )
         fpga_energy = ising.get_energy()
-        print(".")
+        print(f"{tests} {trial}")
         f.write(str(ising.time_elapsed)+",")
         f.write(str(fpga_energy[0].item())+",")
 

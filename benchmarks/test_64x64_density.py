@@ -86,7 +86,7 @@ for sparsity in density_points:
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()
-            print(".")
+            print(f"{sparsity} {tests} {trial}")
             f.write(str(fpga_energy[0].item())+",")
 
         f.write("\n")
