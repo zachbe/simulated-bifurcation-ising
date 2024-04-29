@@ -81,7 +81,7 @@ for time in time_points:
                 shuffle_spins = True
             )
             fpga_energy = ising.get_energy()
-            print(".")
+            print(f"{time} {tests} {trial}")
             f.write(str(time)+",")
             f.write(str(fpga_energy[0].item())+",")
 

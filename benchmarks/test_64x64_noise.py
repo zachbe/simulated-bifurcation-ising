@@ -76,7 +76,7 @@ for tests in range(num_tests):
             shuffle_spins = False
         )
         fpga_energy = ising.get_energy()
-        print(".")
+        print(f"{tests} {trial}")
         f.write(str(ising.time_elapsed)+",")
         f.write(str(fpga_energy[0].item())+",")
 
