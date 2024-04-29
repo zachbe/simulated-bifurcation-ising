@@ -48,7 +48,7 @@ for i in range(64):
 ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 
 # DIMPLE params
-cycles = [20, 40, 60, 80, 100]
+cycles = [100, 200, 300]
 
 # Use DIMPLE to recall smiley in steps
 smilies_out = [smiley_noise]
