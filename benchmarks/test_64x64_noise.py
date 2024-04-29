@@ -27,17 +27,17 @@ f = open("data_noise.csv", "w+")
 
 # TODO: This is a workaround to an issue where repeatedly re-initializing
 # the FPGA occasionally causes errors.
-J = torch.randint(-6, 7, (63,63), dtype=torch.float32)
-h = torch.randint(-6, 7, (63,), dtype=torch.float32)
+J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
+h = torch.randint(-7, 8, (63,), dtype=torch.float32)
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
 
 #Run num_tests J matrixes.
 for tests in range(num_tests):
 
     # Pick random integer couplings.
-    J = torch.randint(-6, 7, (63,63), dtype=torch.float32)
+    J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
     J = torch.round((J + J.t()) / 2)
-    h = torch.randint(-6, 7, (63,), dtype=torch.float32)
+    h = torch.randint(-7, 8, (63,), dtype=torch.float32)
     ising.J = J
     ising.h = h
 
