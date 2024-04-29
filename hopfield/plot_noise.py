@@ -7,8 +7,8 @@ import statistics as stat
 
 # DIMPLE params
 noises = [  5, 10, 15, 20 ]
-cycles = [  20, 40, 60, 80, 100, 120]
-num_tests = 50
+cycles = [  50, 100, 150, 200, 250, 300]
+num_tests = 10
 
 # Parse data from CSV
 data = [[[],[]] for _ in noises]

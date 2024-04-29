@@ -44,8 +44,8 @@ ising = Ising(weights, digital_ising_size = 64, use_fpga = True)
 
 # DIMPLE params
 noises = [  5, 10, 15, 20 ]
-cycles = [  20, 40, 60, 80, 100, 120]
-num_tests = 50
+cycles = [  50, 100, 150, 200, 250, 300]
+num_tests = 10
 
 # Make a bunch of noisy versions of smiley
 smilies = [[] for _ in noises]
