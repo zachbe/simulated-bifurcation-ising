@@ -10,6 +10,32 @@ noises = [  5, 10, 15, 20 ]
 cycles = [  50, 100, 150, 200, 250, 300]
 num_tests = 10
 
+# Image 1: Smiley
+smiley = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
+                   [-1, -1,  1, -1, -1,  1, -1, -1],
+                   [-1, -1,  1, -1, -1,  1, -1, -1],
+                   [-1, -1, -1, -1, -1, -1, -1, -1],
+                   [-1,  1, -1, -1, -1, -1,  1, -1],
+                   [-1,  1, -1, -1, -1, -1,  1, -1],
+                   [-1, -1,  1,  1,  1,  1, -1, -1],
+                   [-1, -1, -1, -1, -1, -1, -1, -1]])
+
+# Image 2: Check
+check  = np.array([[-1, -1, -1, -1, -1, -1, -1, -1],
+                   [-1, -1, -1, -1, -1, -1,  1, -1],
+                   [-1, -1, -1, -1, -1,  1,  1, -1],
+                   [-1,  1, -1, -1, -1,  1, -1, -1],
+                   [-1,  1,  1, -1,  1,  1, -1, -1],
+                   [-1, -1,  1,  1,  1, -1, -1, -1],
+                   [-1, -1, -1,  1, -1, -1, -1, -1],
+                   [-1, -1, -1, -1, -1, -1, -1, -1]])
+
+# Get distance between images
+smiley_1d = smiley.reshape(64)
+check_1d  = check.reshape(64)
+check_dist = np.sum(np.abs(smiley_1d - check_1d))
+check_score = 1 - (check_dist/64)
+
 # Parse data from CSV
 data = [[[],[]] for _ in noises]
 avg  = [[[],[]] for _ in noises]
@@ -18,6 +44,13 @@ high = [[] for _ in noises]
 
 noise_index = 0
 cycle_index = 0
+
+for i in range(len(noises)):
+    data[i][0].append(1 - (float(2*noises[i])/64))
+    data[i][1].append(0)
+    avg[i][0].append(1 - (float(2*noises[i])/64))
+    avg[i][1].append(0)
+
 with open('data_noise.csv', newline = "\n") as f:
     reader = csv.reader(f, delimiter=",")
     for row in reader:
@@ -29,7 +62,7 @@ with open('data_noise.csv', newline = "\n") as f:
                 total = 0
                 for score in row:
                     if score != "":
-                        data[noise_index][0].append(1 - float(score)/64)
+                        data[noise_index][0].append(1 - (float(score)/64))
                         data[noise_index][1].append(cycles[cycle_index] * 4)
                         total += 1 - float(score)/64
                 avg_val = total/num_tests
@@ -43,7 +76,8 @@ with open('data_noise.csv', newline = "\n") as f:
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
-ax.hlines(1, 20*4, 120*4, color = "black", linestyles="dashed")
+ax.hlines(1, 0, 300*4, color = "black", linestyles="dashed")
+ax.hlines(check_score, 0, 300*4, color = "red", linestyles="dashed")
 
 color = iter(plt.cm.cool(np.linspace(0, 1, len(noises))))
 
