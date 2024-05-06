@@ -141,7 +141,7 @@ for num_images in range(10):
     
     # DIMPLE params
     cycles = 300
-    trials = 5
+    trials = 10
     
     for image in images_1d: 
         for trial in range(trials):
