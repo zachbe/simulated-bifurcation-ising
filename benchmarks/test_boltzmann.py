@@ -20,11 +20,12 @@ num_trials = int(sys.argv[1])
 
 f = open("data_boltzmann.csv", "w+")
 
-# TODO: This is a workaround to an issue where repeatedly re-initializing
-# the FPGA occasionally causes errors.
 J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
 h = torch.randint(-7, 8, (63,), dtype=torch.float32)
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+
+torch.save(J, "J.pt")
+torch.save(h, "h.pt")
     
 # Use the simulated bifurcation algorithm to get a baseline solution.
 ising.minimize(
@@ -43,9 +44,6 @@ sim_energy = ising.get_energy()
 
 f.write(str(sim_energy[0].item())+",")
 
-# Run num_trials trials.
-# We can't use agents here, because we need to
-# re-shuffle each time.
 for trial in range(num_trials):
     ising.minimize(
         1,
