@@ -20,12 +20,15 @@ num_trials = int(sys.argv[1])
 
 f = open("data_boltzmann.csv", "w+")
 
-J = torch.randint(-7, 8, (63,63), dtype=torch.float32)
-h = torch.randint(-7, 8, (63,), dtype=torch.float32)
-ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+J = torch.zeros((63,63), dtype=torch.float32)
+h = torch.zeros((63,)  , dtype=torch.float32)
 
-torch.save(J, "J.pt")
-torch.save(h, "h.pt")
+h[62] = -7
+for i in range(0, 62):
+    J[i][i+1] = -7
+    J[i+1][i] = -7
+
+ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
     
 # Use the simulated bifurcation algorithm to get a baseline solution.
 ising.minimize(
@@ -57,6 +60,7 @@ for trial in range(num_trials):
         use_fpga = True,
         cycles = 100000,
         shuffle_spins = False,
+        reprogram_J = (trial == 0),
         counter_cutoff = 0,
         counter_max = 1
     )
