@@ -21,8 +21,9 @@ num_trials = int(sys.argv[1])
 f = open("data_boltzmann.csv", "w+")
 
 J = torch.zeros((63,63), dtype=torch.float32)
-h = torch.full((63,),-7, dtype=torch.float32)
+h = torch.zeros((63,)  , dtype=torch.float32)
 
+h[62] = -7
 for i in range(0, 62):
     J[i][i+1] = -7
     J[i+1][i] = -7
@@ -59,7 +60,7 @@ for trial in range(num_trials):
         use_fpga = True,
         cycles = 100000,
         shuffle_spins = False,
-        reprogram_J = False,
+        reprogram_J = (trial == 0),
         counter_cutoff = 0,
         counter_max = 1
     )

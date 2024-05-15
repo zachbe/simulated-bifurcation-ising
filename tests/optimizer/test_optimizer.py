@@ -85,7 +85,6 @@ def test_optimizer_fpga_rand():
     )
     fpga_elapsed = ising.time_elapsed
     fpga_energy = ising.get_energy()
-    rand_energy = ising.get_rand_energy()
     #print(sim_energy)
     #print(sim_elapsed)
     #print(fpga_energy)

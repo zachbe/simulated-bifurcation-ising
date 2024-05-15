@@ -407,20 +407,10 @@ class Ising:
             raise Exception("Can't get energy if spins aren't computed!")
 
         if self.linear_term:
-            return -0.5*torch.matmul(torch.matmul(torch.transpose(self.computed_spins,0,1),self.J),self.computed_spins)[0]
-        else:
-            return torch.matmul(torch.transpose(self.h,0,1),self.computed_spins)[0] - \
+            return torch.matmul(torch.transpose(self.computed_spins,0,1),self.h)[0] - \
                    0.5*torch.matmul(torch.matmul(torch.transpose(self.computed_spins,0,1),self.J),self.computed_spins)[0]
-
-    def get_rand_energy(self) -> int:
-        random_spins = torch.randint(0, 2, (len(self.J),1), dtype=torch.float32)
-        random_spins = torch.add(torch.mul(random_spins, 2), -1)
-
-        if self.linear_term:
-            return -0.5*torch.matmul(torch.matmul(torch.transpose(random_spins,0,1),self.J),random_spins)[0]
         else:
-            return torch.matmul(torch.transpose(self.h,0,1),self.computed_spins)[0] - \
-                   0.5*torch.matmul(torch.matmul(torch.transpose(random_spins,0,1),self.J),random_spins)[0]
+            return -0.5*torch.matmul(torch.matmul(torch.transpose(self.computed_spins,0,1),self.J),self.computed_spins)[0]
 
     @property
     def dtype(self) -> torch.dtype:
