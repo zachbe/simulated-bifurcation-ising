@@ -22,7 +22,7 @@ for i in range(63):
     # There are 62 total couplings. Each can be +7 or -7.
     # Thus, there are a total of 62 possible energies.
     state_energy = (i * 7) + ((63-i) * -7)
-    probability = math.exp(-state_energy/7)
+    probability = math.exp(-state_energy/6.75)
     density = math.comb(63,i)
     expected_energy.append(state_energy)
     expected_prob.append(probability * density)
@@ -45,12 +45,14 @@ with open('data_boltzmann.csv', newline = "\n") as data:
 fig = plt.figure()
 ax = fig.add_subplot(1,1,1)
 
-bins = list(set(energy))
-bins.sort()
-print(bins)
-print(expected_energy)
-ax.hist(energy, expected_energy, density = True, label = "Actual distribution")
-ax.bar(expected_energy, expected_prob, color = "orange", label = "Expected probability distribution")
+energy_bar = []
+for ebin in expected_energy:
+    energy_bar.append(energy.count(ebin)/num_trials)
+
+ax.bar(expected_energy, energy_bar, width = 8, label = "Actual distribution")
+ax.bar(expected_energy, expected_prob, color = "orange", width = 2, label = "Expected probability distribution")
+
 ax.legend()
+ax.set_xlim([-450, 0])
 
 plt.show()
