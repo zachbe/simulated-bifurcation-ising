@@ -18,12 +18,12 @@ expected_energy = []
 expected_prob   = []
 total = 0
 # Generate expected distribution
-for i in range(63):
+for i in range(127):
     # There are 62 total couplings. Each can be +7 or -7.
     # Thus, there are a total of 62 possible energies.
-    state_energy = (i * 7) + ((63-i) * -7)
-    probability = math.exp(-state_energy/6.75)
-    density = math.comb(63,i)
+    state_energy = (i * 7) + ((127-i) * -7)
+    probability = math.exp(-state_energy/9)
+    density = math.comb(127,i)
     expected_energy.append(state_energy)
     expected_prob.append(probability * density)
     total += probability * density
@@ -53,6 +53,6 @@ ax.bar(expected_energy, energy_bar, width = 8, label = "Actual distribution")
 ax.bar(expected_energy, expected_prob, color = "orange", width = 2, label = "Expected probability distribution")
 
 ax.legend()
-ax.set_xlim([-450, 0])
+ax.set_xlim([-800, 0])
 
 plt.show()
