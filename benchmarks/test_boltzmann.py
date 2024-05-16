@@ -20,15 +20,15 @@ num_trials = int(sys.argv[1])
 
 f = open("data_boltzmann.csv", "w+")
 
-J = torch.zeros((63,63), dtype=torch.float32)
-h = torch.zeros((63,)  , dtype=torch.float32)
+J = torch.zeros((127,127), dtype=torch.float32)
+h = torch.zeros((127,)  , dtype=torch.float32)
 
-h[62] = -7
-for i in range(0, 62):
+h[126] = -7
+for i in range(0, 126):
     J[i][i+1] = -7
     J[i+1][i] = -7
 
-ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
+ising = Ising(J, h, use_fpga = True, digital_ising_size=128)
     
 # Use the simulated bifurcation algorithm to get a baseline solution.
 ising.minimize(

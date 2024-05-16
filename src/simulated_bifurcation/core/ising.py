@@ -101,7 +101,8 @@ class Ising:
         device: Optional[Union[str, torch.device]] = None,
         digital_ising_size: Optional[int] = 8,
         use_fpga: bool = False,
-        weight_scale: int = 15
+        weight_scale: int = 15,
+        verbose = True
     ) -> None:
         self.dimension = J.shape[0]
         if isinstance(J, ndarray):
@@ -114,6 +115,7 @@ class Ising:
         self.weight_scale = weight_scale
         self.use_fpga = use_fpga
         self.time_elapsed = None
+        self.verbose = verbose
         if use_fpga:
             self.ising_lib = ctypes.CDLL("/usr/lib64/ising_lib.so")
             self.ising_lib.initialize_fpga()
@@ -300,7 +302,7 @@ class Ising:
                     if (i < J_list.shape[0]) and (j < J_list.shape[1]):
                         weight_val = J_list[i][j]
                         if weight_val not in valid_weights:
-                            warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
+                            if self.verbose: warnings.warn("Rounding weight "+str(i)+","+str(j)+". Was "+str(weight_val))
                             if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                             if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
                         weight = int(int(weight_val) + int(self.weight_scale/2))
@@ -317,7 +319,7 @@ class Ising:
                 if (i < h_list.shape[0]):
                     weight_val = h_list[i]
                     if weight_val not in valid_weights:
-                        warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
+                        if self.verbose: warnings.warn("Rounding local field weight "+str(i)+". Was "+str(weight_val))
                         if weight_val >  int(self.weight_scale/2) : weight_val =  int(self.weight_scale/2)
                         if weight_val < -int(self.weight_scale/2) : weight_val = -int(self.weight_scale/2)
                     weight = int(int(self.weight_scale/2) - int(weight_val))
@@ -382,7 +384,6 @@ class Ising:
         for j in range(agents):
             start = time.time()
             self.ising_lib.write_ising(int(cycles), 0x00000500) # Start
-            time.sleep(0.01)
             finish = time.time()
             self.time_elapsed += finish - start
             for i in range(len(self.J) * mult):
@@ -396,7 +397,7 @@ class Ising:
                 merged[i % mult] = spin
 
                 if (i % mult == (mult-1)): 
-                    if(merged != merged[0]).all():
+                    if(merged != merged[0]).all() and self.verbose:
                         warnings.warn("Merged spins don't match for elem "+str(i))
                     spins[int(i / mult)].append(merged[0])
 
