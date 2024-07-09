@@ -72,5 +72,9 @@ for trial in range(num_trials):
         data[trial][i] = snp[i]
     f.write(str(fpga_energy[0].item())+",")
 
+with open("boltzmann_J.npy", "wb+") as bf:
+    np.save(bf, J.numpy())
+with open("boltzmann_h.npy", "wb+") as bf:
+    np.save(bf, h.numpy())
 with open("boltzmann_samples.npy", "wb+") as bf:
     np.save(bf, data)
