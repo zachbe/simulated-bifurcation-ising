@@ -47,6 +47,7 @@ sim_energy = ising.get_energy()
 
 f.write(str(sim_energy[0].item())+",")
 
+data = np.zeros((num_trials, 63))
 for trial in range(num_trials):
     ising.minimize(
         1,
@@ -66,4 +67,10 @@ for trial in range(num_trials):
     )
     fpga_energy = ising.get_energy()
     print(f"{trial}")
+    snp = ising.computed_spins.numpy()
+    for i in range(len(snp)):
+        data[trial][i] = snp[i]
     f.write(str(fpga_energy[0].item())+",")
+
+with open("boltzmann_samples.npy", "wb+") as bf:
+    np.save(bf, data)
