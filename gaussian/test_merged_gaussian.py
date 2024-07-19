@@ -21,12 +21,12 @@ num_trials = int(sys.argv[1])
 f = open("data_gaussian_rand.csv", "w+")
 
 # Basic matrix
-J = [[0,-7],[-7,0]]
+J = [[3,-3],[-3,6]]
 J = np.kron(J, np.ones((32,32)))
 J = J[:63,:63]
 J = torch.from_numpy(J).float()
 
-h = [0,-7]
+h = [-3, 6]
 h = np.kron(h, np.ones(32))
 h = h[:63]
 h = torch.from_numpy(h).float()
@@ -58,6 +58,7 @@ for trial in range(num_trials):
         False,
         False,
         False,
+        autoscale = False,
         use_window=False,
         sampling_period=50,
         convergence_threshold=50,
