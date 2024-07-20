@@ -25,7 +25,8 @@ J = [[2,1,1],[1,2,1],[1,1,2]]
 J = np.kron(J, np.ones((21,21)))
 J = torch.from_numpy(J).float()
 
-h = np.ones(63)
+h = np.zeros(63)
+h[62] = 7
 h = torch.from_numpy(h).float()
 
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
