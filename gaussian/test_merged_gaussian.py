@@ -20,15 +20,30 @@ num_trials = int(sys.argv[1])
 
 f = open("data_gaussian_rand.csv", "w+")
 
-# Basic matrix
-J = [[-2,-1],[-1,-2]]
-J = np.kron(J, np.ones((32,32)))
-J = J[:63,:63]
-J = torch.from_numpy(J).float()
+## # Basic matrix
+## J = [[-2,-1],[-1,-2]]
+## J = np.kron(J, np.ones((32,32)))
+## J = J[:63,:63]
+## J = torch.from_numpy(J).float()
+## 
+## h = [-1,-2]
+## h = np.kron(h, np.ones(32))
+## h = h[:63]
+## h = torch.from_numpy(h).float()
 
-h = [-1,-2]
-h = np.kron(h, np.ones(32))
-h = h[:63]
+# Pick random integer couplings
+J = torch.randint(-7, 8, (8,8), dtype=torch.float32)
+J = torch.round((J + J.t()) / 2)
+
+with open("gaussian_J_rand.npy", "wb+") as bf:
+    np.save(bf, J.numpy())
+
+# Convert to multi-bit representation
+J = np.kron(J, np.ones((8, 8)))
+h = J[63][:63]
+J = J[:63,:63]
+
+J = torch.from_numpy(J).float()
 h = torch.from_numpy(h).float()
 
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
@@ -76,9 +91,5 @@ for trial in range(num_trials):
         data[trial][i] = snp[i][0]
     f.write(str(fpga_energy[0].item())+",")
 
-with open("gaussian_J_rand.npy", "wb+") as bf:
-    np.save(bf, J.numpy())
-with open("gaussian_h_rand.npy", "wb+") as bf:
-    np.save(bf, h.numpy())
 with open("gaussian_samples_rand.npy", "wb+") as bf:
     np.save(bf, data)
