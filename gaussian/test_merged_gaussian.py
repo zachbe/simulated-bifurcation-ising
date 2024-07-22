@@ -31,8 +31,8 @@ f = open("data_gaussian_rand.csv", "w+")
 ## h = h[:63]
 ## h = torch.from_numpy(h).float()
 
-# Pick random integer couplings
-J = torch.randint(-7, 8, (2,2), dtype=torch.float32)
+# Pick random positive integer couplings
+J = torch.randint(-7, 0, (2,2), dtype=torch.float32)
 J = torch.round((J + J.t()) / 2)
 
 print(J)
