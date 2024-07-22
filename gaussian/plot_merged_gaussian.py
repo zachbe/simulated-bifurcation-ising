@@ -11,7 +11,7 @@ J = np.load("gaussian_J_rand.npy")
 print(-J)
 print(np.linalg.inv(-J))
 
-num_units = 2
+num_units = 4
 total_spins = 64
 per = int(total_spins / num_units)
 
