@@ -32,14 +32,17 @@ f = open("data_gaussian_rand.csv", "w+")
 ## h = torch.from_numpy(h).float()
 
 # Pick random integer couplings
-J = torch.randint(-7, 8, (8,8), dtype=torch.float32)
+J = torch.randint(-7, 8, (2,2), dtype=torch.float32)
 J = torch.round((J + J.t()) / 2)
+
+print(J)
+print(np.linalg.inv(J))
 
 with open("gaussian_J_rand.npy", "wb+") as bf:
     np.save(bf, J.numpy())
 
 # Convert to multi-bit representation
-J = np.kron(J, np.ones((8, 8)))
+J = np.kron(J, np.ones((32, 32)))
 h = J[63][:63]
 J = J[:63,:63]
 
