@@ -21,12 +21,14 @@ num_trials = int(sys.argv[1])
 f = open("data_gaussian_rand.csv", "w+")
 
 # Basic matrix
-J = [[2,1,1],[1,2,1],[1,1,2]]
-J = np.kron(J, np.ones((21,21)))
+J = [[-2,-1],[-1,-2]]
+J = np.kron(J, np.ones((32,32)))
+J = J[:63,:63]
 J = torch.from_numpy(J).float()
 
-h = np.zeros(63)
-h[62] = 7
+h = [-1,-2]
+h = np.kron(h, np.ones(32))
+h = h[:63]
 h = torch.from_numpy(h).float()
 
 ising = Ising(J, h, use_fpga = True, digital_ising_size=64)
