@@ -25,7 +25,7 @@ J = torch.randint(-2, 1, (3,3), dtype=torch.float32)
 for i in range(3):
     J[i][i] = -4
 J = torch.round((J + J.t()) / 2)
-h = torch.randint(-2, 1, (3,), dtype=torch.float32)
+h = torch.randint(-7, 1, (3,), dtype=torch.float32)
 
 print(-J)
 print(np.linalg.inv(-J))
