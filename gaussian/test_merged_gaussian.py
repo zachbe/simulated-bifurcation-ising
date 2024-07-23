@@ -20,34 +20,27 @@ num_trials = int(sys.argv[1])
 
 f = open("data_gaussian_rand.csv", "w+")
 
-## # Basic matrix
-## J = [[-2,-1],[-1,-2]]
-## J = np.kron(J, np.ones((32,32)))
-## J = J[:63,:63]
-## J = torch.from_numpy(J).float()
-## 
-## h = [-1,-2]
-## h = np.kron(h, np.ones(32))
-## h = h[:63]
-## h = torch.from_numpy(h).float()
-
 # Pick random positive integer couplings
-J = torch.randint(-2, 1, (4,4), dtype=torch.float32)
-for i in range(4):
+J = torch.randint(-2, 1, (3,3), dtype=torch.float32)
+for i in range(3):
     J[i][i] = -4
-#J = torch.from_numpy(np.array([[-2,-1,-1,-1],[-1,-2,-1,-1],[-1,-1,-2,-1],[-1,-1,-1,-2]])).float()
 J = torch.round((J + J.t()) / 2)
+h = torch.randint(-2, 1, (3,), dtype=torch.float32)
 
 print(-J)
 print(np.linalg.inv(-J))
+print(-h.numpy())
+print(np.linalg.inv(-J) @ -h.numpy())
 
 with open("gaussian_J_rand.npy", "wb+") as bf:
     np.save(bf, J.numpy())
 
+with open("gaussian_h_rand.npy", "wb+") as bf:
+    np.save(bf, h.numpy())
+
 # Convert to multi-bit representation
-J = np.kron(J, np.ones((16, 16)))
-h = J[63][:63]
-J = J[:63,:63]
+J = np.kron(J, np.ones((21, 21)))
+h = np.kron(h, np.ones(21))
 
 J = torch.from_numpy(J).float()
 h = torch.from_numpy(h).float()
