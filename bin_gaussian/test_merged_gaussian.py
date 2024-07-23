@@ -23,7 +23,7 @@ f = open("data_gaussian_rand.csv", "w+")
 # Pick known-good couplings
 # This is because of our limited weight resolution
 J = torch.tensor([[-2,-1,-1],[-1,-2,-1],[-1,-1,-2]]).float()
-h = torch.tensor([-1,0,-1]).float()
+h = torch.tensor([-1,-1,-1]).float()
 
 print(-J)
 print(np.linalg.inv(-J))
@@ -37,11 +37,9 @@ with open("gaussian_h_rand.npy", "wb+") as bf:
     np.save(bf, h.numpy())
 
 # Convert to multi-bit representation
-#J = np.kron(J, np.array([[1,2],[2,4]]))
-J = np.kron(J, np.array([[1,1],[1,1]]))
+J = np.kron(J, np.array([[1,2],[2,4]]))
 J = np.kron(J, np.ones((10,10)))
-#h = np.kron(h, np.array([1,2]))
-h = np.kron(h, np.array([1,1]))
+h = np.kron(h, np.array([1,2]))
 h = np.kron(h, np.ones(10))
 
 # Clip
