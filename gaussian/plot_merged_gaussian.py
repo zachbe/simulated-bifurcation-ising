@@ -9,7 +9,8 @@ import math
 samples = np.load("gaussian_samples_rand.npy")
 J = np.load("gaussian_J_rand.npy")
 print(-J)
-print(np.linalg.inv(-J))
+inv = np.linalg.inv(-J)
+print(inv/inv[0][0])
 
 num_units = 4
 total_spins = 64
@@ -34,6 +35,6 @@ for a_i in range(num_units):
     for b_i in range(num_units):
         cov[a_i][b_i] = float(np.cov(gaussian[a_i], gaussian[b_i])[0][1])
 
-print(cov)
+print(np.array(cov)/cov[0][0])
 
 plt.show()
