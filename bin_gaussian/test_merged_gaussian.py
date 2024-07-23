@@ -37,9 +37,11 @@ with open("gaussian_h_rand.npy", "wb+") as bf:
     np.save(bf, h.numpy())
 
 # Convert to multi-bit representation
-J = np.kron(J, np.array([[1,2],[2,4]]))
+#J = np.kron(J, np.array([[1,2],[2,4]]))
+J = np.kron(J, np.array([[1,1],[1,1]]))
 J = np.kron(J, np.ones((10,10)))
-h = np.kron(h, np.array([1,2]))
+#h = np.kron(h, np.array([1,2]))
+h = np.kron(h, np.array([1,1]))
 h = np.kron(h, np.ones(10))
 
 # Clip
