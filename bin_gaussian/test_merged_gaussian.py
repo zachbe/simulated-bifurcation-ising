@@ -20,13 +20,10 @@ num_trials = int(sys.argv[1])
 
 f = open("data_gaussian_rand.csv", "w+")
 
-# Pick random couplings, only 0 and 1
+# Pick known-good couplings
 # This is because of our limited weight resolution
-J = torch.randint(-1, 1, (3,3), dtype=torch.float32)
-for i in range(3):
-    J[i][i] = -2
-J = torch.round((J + J.t()) / 2)
-h = torch.randint(-1, 1, (3,), dtype=torch.float32)
+J = torch.tensor([[-2,-1,-1],[-1,-2,-1],[-1,-1,-2]]).float()
+h = torch.tensor([-1,0,-1]).float()
 
 print(-J)
 print(np.linalg.inv(-J))
