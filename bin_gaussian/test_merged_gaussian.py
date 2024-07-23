@@ -22,8 +22,8 @@ f = open("data_gaussian_rand.csv", "w+")
 
 # Pick known-good couplings
 # This is because of our limited weight resolution
-J = torch.tensor([[-2,-1,-1],[-1,-2,-1],[-1,-1,-2]]).float()
-h = torch.tensor([-1,-1,-1]).float()
+J = torch.tensor([[-2,-1,0],[-1,-2,-1],[0,-1,-2]]).float()
+h = torch.tensor([-1,-1,0]).float()
 
 print(-J)
 print(np.linalg.inv(-J))
