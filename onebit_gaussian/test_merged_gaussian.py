@@ -21,14 +21,13 @@ num_trials = int(sys.argv[1])
 f = open("data_gaussian_rand.csv", "w+")
 
 # Pick known-good couplings
-J = torch.tensor([[-2,0,-1],[0,-1,0],[-1,0,-2]]).float()
-
-# Ising -> qubo:
-# h_i = 2 * sum of q_ij for all j
-h = torch.tensor([-6, -2, -6]).float()
+J = torch.tensor([[-4,-1,-2],[-1,-4,0],[-2,0,-4]]).float()
+h = torch.tensor([-0, -0, -0]).float()
 
 print(-J)
 print(np.linalg.inv(-J))
+print(-h.numpy())
+print(np.linalg.inv(-J) @ -h.numpy())
 
 with open("gaussian_J_rand.npy", "wb+") as bf:
     np.save(bf, J.numpy())
@@ -36,9 +35,32 @@ with open("gaussian_J_rand.npy", "wb+") as bf:
 with open("gaussian_h_rand.npy", "wb+") as bf:
     np.save(bf, h.numpy())
 
-# Convert to multibit representation
-J = np.kron(J, np.ones((21,21)))
-h = np.kron(h, np.ones(21))
+# Convert to sparse representation
+new_J = [[] for _ in range(len(J))]
+for i in range(len(J)):
+    for j in range(len(J)):
+        if J[i][j] == -4:
+            new_J[i].append(np.ones((20,20)))
+        if J[i][j] == -2:
+            new_J[i].append(np.kron(np.ones((10,10)), np.identity(2)))
+        if J[i][j] == -1:
+            new_J[i].append(np.kron(np.ones((5,5)), np.identity(4)))
+        if J[i][j] == 0:
+            new_J[i].append(np.zeros((20,20)))
+        if j == len(J) - 1:
+            new_J[i] = np.concatenate(new_J[i])
+
+J = np.concatenate(new_J, axis=1)
+
+print(J)
+
+# h is not sparse for now
+h = np.kron(h, np.ones(20))
+
+# Extend
+J = np.concatenate((J, np.zeros((3,60))), axis = 0)
+J = np.concatenate((J, np.zeros((63,3))), axis = 1)
+h = np.concatenate((h, np.zeros(3)), axis = 0)
 
 J = torch.from_numpy(J).float()
 h = torch.from_numpy(h).float()

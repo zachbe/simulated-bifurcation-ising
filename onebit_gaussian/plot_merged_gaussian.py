@@ -16,12 +16,12 @@ inv = np.linalg.inv(-J)
 print("Target inverse")
 print(inv/inv[0][0])
 
-#h = np.load("gaussian_h_rand.npy")
-#print("Input vector")
-#print(-h)
-#sol = inv @ (-h)
-#print("Linear system solution")
-#print(sol/sol[0])
+h = np.load("gaussian_h_rand.npy")
+print("Input vector")
+print(-h)
+sol = inv @ (-h)
+print("Linear system solution")
+print(sol/sol[0])
 
 print("--------------------------")
 
@@ -34,9 +34,7 @@ per = int(total_spins / num_units)
 gaussian = [[] for _ in range(num_units)]
 for trial in range(len(samples)):
     for unit in range(num_units):
-        sam_qubo = samples[trial]
-        sam_qubo[sam_qubo == -1] = 0
-        sam = int(np.sum(sam_qubo[per * unit : per * (unit+1)]))
+        sam = int(np.sum(samples[trial][per * unit : per * (unit+1)]))
         gaussian[unit].append(sam)
 
 # Calculate mean and covariance
@@ -47,11 +45,11 @@ for a_i in range(num_units):
 print("Device inverse")
 print(np.array(cov)/cov[0][0])
 
-#mean = [0 for _ in range(num_units)]
-#for a in range(num_units):
-#    mean[a] = np.sum(gaussian[a])/per
-#print("Device linear system solution")
-#print(mean/mean[0])
+mean = [0 for _ in range(num_units)]
+for a in range(num_units):
+    mean[a] = np.sum(gaussian[a])/per
+print("Device linear system solution")
+print(mean/mean[0])
 
 ## Plot hisograms
 #fig = plt.figure()
