@@ -22,7 +22,7 @@ f = open("data_gaussian_rand.csv", "w+")
 
 # Pick known-good couplings
 J = torch.tensor([[-4,-1,-2],[-1,-4,0],[-2,0,-4]]).float()
-h = torch.tensor([-0, -0, -0]).float()
+h = torch.tensor([-4, -4, -4]).float()
 
 print(-J)
 print(np.linalg.inv(-J))
@@ -41,17 +41,21 @@ for i in range(len(J)):
     for j in range(len(J)):
         if J[i][j] == -4:
             new_J[i].append(np.ones((20,20)))
+            #new_J[i].append(4*np.ones((20,20)))
         if J[i][j] == -2:
             new_J[i].append(np.kron(np.ones((10,10)), np.identity(2)))
+            #new_J[i].append(2*np.ones((20,20)))
         if J[i][j] == -1:
             new_J[i].append(np.kron(np.ones((5,5)), np.identity(4)))
+            #new_J[i].append(1*np.ones((20,20)))
         if J[i][j] == 0:
             new_J[i].append(np.zeros((20,20)))
         if j == len(J) - 1:
             new_J[i] = np.concatenate(new_J[i])
 
-J = np.concatenate(new_J, axis=1)
+J = -np.concatenate(new_J, axis=1)*1
 
+np.set_printoptions(threshold=np.inf)
 print(J)
 
 # h is not sparse for now
